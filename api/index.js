@@ -202,19 +202,23 @@ app.post('/admin/add-protection',async(req,res)=>{if(!isAdminAuth(req.headers['x
 app.post('/admin/remove-protection',async(req,res)=>{if(!isAdminAuth(req.headers['x-admin-token']||req.query.token))return res.json({e:'Unauthorized'});delete protectedData[req.body.value];saveToDisk();res.json({success:true})});
 app.post('/admin/stop-key',async(req,res)=>{if(!isAdminAuth(req.headers['x-admin-token']||req.query.token))return res.json({e:'Unauthorized'});if(!keyStorage[req.body.keyName])return res.json({e:'Not found'});if(keyStorage[req.body.keyName]._hardcoded)return res.json({e:'Hardcoded'});keyStorage[req.body.keyName].stopped=!keyStorage[req.body.keyName].stopped;saveToDisk();res.json({success:true,stopped:keyStorage[req.body.keyName].stopped})});
 
-// ✅ IMPORT KEYS - FIXED SYNTAX
+// ✅ IMPORT KEYS - FIXED: Properly extract keys from the imported JSON
 app.post('/admin/import-keys', async function(req, res) {
   try {
     if (!isAdminAuth(req.headers['x-admin-token'] || req.query.token)) {
       return res.json({e:'Unauthorized'});
     }
-    const keys = req.body.keys;
+    const data = req.body;
+    // Check if data has a 'keys' property (from export format)
+    let keys = data.keys || data;
     if (!keys || typeof keys !== 'object') {
       return res.json({e:'Invalid JSON format'});
     }
     let imported = 0;
     let skipped = 0;
     for (const keyName of Object.keys(keys)) {
+      // Skip metadata properties
+      if (keyName === 'success' || keyName === 'total' || keyName === 'exported_at') continue;
       if (keyStorage[keyName]) {
         skipped++;
         continue;
@@ -223,11 +227,23 @@ app.post('/admin/import-keys', async function(req, res) {
       if (keyData._hardcoded) {
         continue;
       }
+      // Ensure proper structure
       keyStorage[keyName] = {
-        ...keyData,
+        name: keyData.name || 'Imported',
+        scopes: keyData.scopes || ['number'],
         type: 'generated',
-        _hardcoded: false,
-        hidden: false
+        limit: parseInt(keyData.limit) || 100,
+        used: parseInt(keyData.used) || 0,
+        cooldown: parseInt(keyData.cooldown) || 0,
+        dailyLimit: parseInt(keyData.dailyLimit) || 0,
+        perSecondLimit: parseInt(keyData.perSecondLimit) || 5,
+        expiry: keyData.expiry ? new Date(keyData.expiry) : null,
+        expiryStr: keyData.expiryStr || 'LIFETIME',
+        created: keyData.created || getIndiaDateTime(),
+        unlimited: keyData.unlimited || false,
+        hidden: false,
+        stopped: keyData.stopped || false,
+        _hardcoded: false
       };
       imported++;
     }
@@ -239,7 +255,7 @@ app.post('/admin/import-keys', async function(req, res) {
       message: '✅ ' + imported + ' keys imported, ' + skipped + ' skipped!'
     });
   } catch(e) {
-    res.json({e:'Error importing keys'});
+    res.json({e:'Error importing keys: ' + e.message});
   }
 });
 
