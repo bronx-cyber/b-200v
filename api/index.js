@@ -10,7 +10,6 @@ const REAL_API_KEYS = ['bronx-bot-9999', 'bronx-bot-9999', 'bronx-ultra-king-ft-
 let currentKeyIndex = 0;
 function getNextKey() { const key = REAL_API_KEYS[currentKeyIndex]; currentKeyIndex = (currentKeyIndex + 1) % REAL_API_KEYS.length; return key; }
 
-// 🔥 FAKE IP POOL - ENHANCED
 const FAKE_IPS = [
     '103.15.224.' + Math.floor(Math.random()*255), '117.98.45.' + Math.floor(Math.random()*255),
     '152.67.89.' + Math.floor(Math.random()*255), '157.34.123.' + Math.floor(Math.random()*255),
@@ -20,11 +19,9 @@ const FAKE_IPS = [
     '176.32.90.' + Math.floor(Math.random()*255), '198.54.123.' + Math.floor(Math.random()*255),
 ];
 const BROWSERS = ['Chrome/120', 'Firefox/121', 'Safari/17.2', 'Edge/120', 'Opera/106', 'Brave/1.62', 'Arc/1.21'];
-const OS_LIST = ['Windows 10', 'Windows 11', 'macOS 14.2', 'Ubuntu 22.04', 'Android 14', 'iOS 17.2'];
 
 function getFakeIP() { return FAKE_IPS[Math.floor(Math.random() * FAKE_IPS.length)]; }
 function getFakeBrowser() { return BROWSERS[Math.floor(Math.random() * BROWSERS.length)]; }
-function getFakeOS() { return OS_LIST[Math.floor(Math.random() * OS_LIST.length)]; }
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'BRONX_ULTRA';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'king5';
@@ -145,7 +142,6 @@ function incrementKeyUsage(k, ep, ip, browser){
         dailyLimits[dk]++;
         if(keyStorage[k].used%5===0)scheduleSave();
     }
-    // Monitor log
     keyMonitorLogs.push({
         key: k.substring(0, 8) + '***',
         fullKey: k,
@@ -285,7 +281,6 @@ app.get('/',(req,res)=>{try{res.send(renderHome())}catch(e){res.send('Error load
 app.get('/docs',(req,res)=>{try{res.send(renderDocs())}catch(e){res.send('Error loading docs')}});
 app.get('/test',(req,res)=>{res.json({status:'✅ BRONX V200 ULTRA',storage:'RENDER DISK',endpoints:Object.keys(endpoints).length,total_keys:Object.keys(keyStorage).length,custom_apis:customAPIs.length})});
 
-// API Routes
 app.get('/api/leakinfo',async(req,res)=>{
     try{
         const t=req.query.term||req.query.info;
@@ -371,7 +366,6 @@ app.get('/api/key-bronx/:ep',async(req,res)=>{
     }catch(e){res.json({error:'API error'})}
 });
 
-// Admin Login
 app.get('/admin',(req,res)=>{
     try{
         const token=req.query.token||req.headers['x-admin-token'];
@@ -388,30 +382,15 @@ app.post('/admin/login',async(req,res)=>{
         const token=generateToken();
         adminSessions[token]={expiresAt:Date.now()+(365*24*60*60*1000),permanent:true};
         permanentTokens[token]={createdAt:getIndiaDateTime()};
-        adminLogs.push({
-            user: username,
-            action: 'LOGIN',
-            ip: ip,
-            browser: browser,
-            timestamp: getIndiaDateTime(),
-            status: 'SUCCESS'
-        });
+        adminLogs.push({user: username,action: 'LOGIN',ip: ip,browser: browser,timestamp: getIndiaDateTime(),status: 'SUCCESS'});
         scheduleSave();
         res.json({success:true,token,message:'✅ Access Granted',redirect:'/admin?token='+token});
     } else {
-        adminLogs.push({
-            user: username,
-            action: 'LOGIN_FAILED',
-            ip: ip,
-            browser: browser,
-            timestamp: getIndiaDateTime(),
-            status: 'FAILED'
-        });
+        adminLogs.push({user: username,action: 'LOGIN_FAILED',ip: ip,browser: browser,timestamp: getIndiaDateTime(),status: 'FAILED'});
         res.json({success:false,error:'Invalid credentials'});
     }
 });
 
-// Admin API endpoints
 app.post('/admin/generate-key',async(req,res)=>{
     if(!isAdminAuth(req.headers['x-admin-token']||req.query.token))return res.json({e:'Unauthorized'});
     const{keyName,keyOwner,scopes,limit,expiryDate,days,cooldown,dailyLimit,perSecondLimit}=req.body;
@@ -428,20 +407,10 @@ app.post('/admin/generate-key',async(req,res)=>{
         es=expiryDate;
     }
     keyStorage[keyName]={
-        name:keyOwner,
-        scopes:ks,
-        type:'generated',
-        limit:parseInt(limit)||100,
-        used:0,
-        cooldown:parseInt(cooldown)||0,
-        dailyLimit:parseInt(dailyLimit)||0,
-        perSecondLimit:parseInt(perSecondLimit)||0,
-        expiry:exp,
-        expiryStr:es,
-        created:getIndiaDateTime(),
-        unlimited:false,
-        hidden:false,
-        _hardcoded:false
+        name:keyOwner,scopes:ks,type:'generated',limit:parseInt(limit)||100,used:0,
+        cooldown:parseInt(cooldown)||0,dailyLimit:parseInt(dailyLimit)||0,
+        perSecondLimit:parseInt(perSecondLimit)||0,expiry:exp,expiryStr:es,
+        created:getIndiaDateTime(),unlimited:false,hidden:false,_hardcoded:false
     };
     saveToDisk();
     res.json({success:true,key:keyName,scopes:ks,cooldown:(parseInt(cooldown)||0)+'s',dailyLimit:dailyLimit||'Unlimited',perSecondLimit:perSecondLimit||'Unlimited',expiry:es,message:'🔑 Key Generated!'});
@@ -471,28 +440,18 @@ app.post('/admin/delete-key',async(req,res)=>{
 
 app.post('/admin/reset-key-usage',async(req,res)=>{
     if(!isAdminAuth(req.headers['x-admin-token']||req.query.token))return res.json({e:'Unauthorized'});
-    if(keyStorage[req.body.keyName]){
-        keyStorage[req.body.keyName].used=0;
-        saveToDisk();
-        res.json({success:true});
-    }
+    if(keyStorage[req.body.keyName]){keyStorage[req.body.keyName].used=0;saveToDisk();res.json({success:true});}
 });
 
 app.post('/admin/reset-all',async(req,res)=>{
     if(!isAdminAuth(req.headers['x-admin-token']||req.query.token))return res.json({e:'Unauthorized'});
     Object.keys(keyStorage).forEach(k=>{if(k!==MASTER_API_KEY&&!keyStorage[k]._hardcoded)keyStorage[k].used=0});
-    dailyLimits={};
-    perSecondLimits={};
-    saveToDisk();
-    res.json({success:true});
+    dailyLimits={};perSecondLimits={};saveToDisk();res.json({success:true});
 });
 
 app.post('/admin/clear-logs',async(req,res)=>{
     if(!isAdminAuth(req.headers['x-admin-token']||req.query.token))return res.json({e:'Unauthorized'});
-    requestLogs=[];
-    keyMonitorLogs=[];
-    saveToDisk();
-    res.json({success:true});
+    requestLogs=[];keyMonitorLogs=[];saveToDisk();res.json({success:true});
 });
 
 app.post('/admin/add-api',async(req,res)=>{
@@ -500,8 +459,7 @@ app.post('/admin/add-api',async(req,res)=>{
     const{name,endpoint,param,example,realAPI,visible}=req.body;
     if(!name||!endpoint)return res.json({e:'Missing fields'});
     customAPIs.push({id:customAPIs.length+1,name,endpoint,param:param||'num',example:example||'9876543210',visible:visible!==false,realAPI:realAPI||''});
-    saveToDisk();
-    res.json({success:true});
+    saveToDisk();res.json({success:true});
 });
 
 app.post('/admin/toggle-api',async(req,res)=>{
@@ -524,8 +482,7 @@ app.post('/admin/update-scopes',async(req,res)=>{
     if(!keyStorage[keyName])return res.json({e:'Key not found'});
     if(keyStorage[keyName]._hardcoded)return res.json({e:'Hardcoded key'});
     keyStorage[keyName].scopes=scopes;
-    saveToDisk();
-    res.json({success:true});
+    saveToDisk();res.json({success:true});
 });
 
 app.post('/admin/add-protection',async(req,res)=>{
@@ -533,15 +490,13 @@ app.post('/admin/add-protection',async(req,res)=>{
     const{value}=req.body;
     if(!value)return res.json({e:'Missing value'});
     protectedData[value]=value;
-    saveToDisk();
-    res.json({success:true,message:'✅ Protected: '+value});
+    saveToDisk();res.json({success:true,message:'✅ Protected: '+value});
 });
 
 app.post('/admin/remove-protection',async(req,res)=>{
     if(!isAdminAuth(req.headers['x-admin-token']||req.query.token))return res.json({e:'Unauthorized'});
     delete protectedData[req.body.value];
-    saveToDisk();
-    res.json({success:true});
+    saveToDisk();res.json({success:true});
 });
 
 app.post('/admin/stop-key',async(req,res)=>{
@@ -549,22 +504,17 @@ app.post('/admin/stop-key',async(req,res)=>{
     if(!keyStorage[req.body.keyName])return res.json({e:'Key not found'});
     if(keyStorage[req.body.keyName]._hardcoded)return res.json({e:'Hardcoded key'});
     keyStorage[req.body.keyName].stopped=!keyStorage[req.body.keyName].stopped;
-    saveToDisk();
-    res.json({success:true,stopped:keyStorage[req.body.keyName].stopped});
+    saveToDisk();res.json({success:true,stopped:keyStorage[req.body.keyName].stopped});
 });
 
-// IMPORT KEYS - FIXED
 app.post('/admin/import-keys',async(req,res)=>{
     try{
         if(!isAdminAuth(req.headers['x-admin-token']||req.query.token))return res.json({e:'Unauthorized'});
         const body = req.body;
-        // Support both direct and nested formats
         let keysToImport = body.keys || body;
-        // If it has 'keys' property that's an object, extract it
         if (keysToImport.keys && typeof keysToImport.keys === 'object' && !Array.isArray(keysToImport.keys)) {
             keysToImport = keysToImport.keys;
         }
-        // Filter out metadata fields
         const metadataFields = ['success', 'total', 'keys', 'exported_at'];
         let imported=0,skipped=0;
         Object.entries(keysToImport).forEach(([keyName,keyData])=>{
@@ -573,20 +523,14 @@ app.post('/admin/import-keys',async(req,res)=>{
             if(keyStorage[keyName]){skipped++;return;}
             if(keyData._hardcoded) return;
             keyStorage[keyName]={
-                name: keyData.name || 'Imported',
-                scopes: keyData.scopes || ['number'],
-                type: 'generated',
-                limit: keyData.limit || 100,
-                used: keyData.used || 0,
-                cooldown: keyData.cooldown || 0,
-                dailyLimit: keyData.dailyLimit || 0,
+                name: keyData.name || 'Imported',scopes: keyData.scopes || ['number'],
+                type: 'generated',limit: keyData.limit || 100,used: keyData.used || 0,
+                cooldown: keyData.cooldown || 0,dailyLimit: keyData.dailyLimit || 0,
                 perSecondLimit: keyData.perSecondLimit || 0,
                 expiry: keyData.expiry ? new Date(keyData.expiry) : null,
                 expiryStr: keyData.expiryStr || 'LIFETIME',
                 created: keyData.created || getIndiaDateTime(),
-                unlimited: keyData.unlimited || false,
-                hidden: false,
-                _hardcoded: false
+                unlimited: keyData.unlimited || false,hidden: false,_hardcoded: false
             };
             imported++;
         });
@@ -595,7 +539,6 @@ app.post('/admin/import-keys',async(req,res)=>{
     }catch(e){res.json({e:'Error importing keys'})}
 });
 
-// EXPORT KEYS - FIXED
 app.get('/admin/export-keys',async(req,res)=>{
     try{
         if(!isAdminAuth(req.headers['x-admin-token']||req.query.token))return res.json({e:'Unauthorized'});
@@ -603,18 +546,11 @@ app.get('/admin/export-keys',async(req,res)=>{
         Object.entries(keyStorage).forEach(([k,v])=>{
             if(!v._hardcoded&&!v.hidden){
                 exportKeys[k]={
-                    name:v.name,
-                    scopes:v.scopes,
-                    limit:v.limit,
-                    used:v.used,
-                    cooldown:v.cooldown||0,
-                    dailyLimit:v.dailyLimit||0,
-                    perSecondLimit:v.perSecondLimit||0,
-                    expiry:v.expiry,
-                    expiryStr:v.expiryStr,
-                    created:v.created,
-                    unlimited:v.unlimited||false,
-                    stopped:v.stopped||false
+                    name:v.name,scopes:v.scopes,limit:v.limit,used:v.used,
+                    cooldown:v.cooldown||0,dailyLimit:v.dailyLimit||0,
+                    perSecondLimit:v.perSecondLimit||0,expiry:v.expiry,
+                    expiryStr:v.expiryStr,created:v.created,
+                    unlimited:v.unlimited||false,stopped:v.stopped||false
                 };
             }
         });
@@ -622,608 +558,57 @@ app.get('/admin/export-keys',async(req,res)=>{
     }catch(e){res.json({e:'Error exporting keys'})}
 });
 
-// Monitor Logs API
 app.get('/admin/monitor-logs',(req,res)=>{
     if(!isAdminAuth(req.headers['x-admin-token']||req.query.token))return res.json({e:'Unauthorized'});
     res.json({logs: keyMonitorLogs.slice(-100), total: keyMonitorLogs.length});
 });
 
-// Admin Logs API
 app.get('/admin/admin-logs',(req,res)=>{
     if(!isAdminAuth(req.headers['x-admin-token']||req.query.token))return res.json({e:'Unauthorized'});
     res.json({logs: adminLogs.slice(-100), total: adminLogs.length});
 });
 
-// Stats API
 app.get('/admin/stats',(req,res)=>{
     if(!isAdminAuth(req.headers['x-admin-token']||req.query.token))return res.json({e:'Unauthorized'});
     const today = getIndiaDate();
     const weekAgo = new Date(getIndiaTime().getTime() - 7*24*60*60*1000).toISOString().split('T')[0];
     const monthAgo = new Date(getIndiaTime().getTime() - 30*24*60*60*1000).toISOString().split('T')[0];
-    
     const todayLogs = keyMonitorLogs.filter(l=>l.date===today);
     const weekLogs = keyMonitorLogs.filter(l=>l.date>=weekAgo);
     const monthLogs = keyMonitorLogs.filter(l=>l.date>=monthAgo);
-    
-    // Top 5 keys
     const keyCount = {};
-    keyMonitorLogs.forEach(l=>{
-        if(!keyCount[l.key]) keyCount[l.key] = 0;
-        keyCount[l.key]++;
-    });
+    keyMonitorLogs.forEach(l=>{if(!keyCount[l.key]) keyCount[l.key] = 0;keyCount[l.key]++;});
     const topKeys = Object.entries(keyCount).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([k,v])=>({key:k,requests:v}));
-    
-    res.json({
-        totalRequests: keyMonitorLogs.length,
-        todayRequests: todayLogs.length,
-        weeklyRequests: weekLogs.length,
-        monthlyRequests: monthLogs.length,
-        topKeys: topKeys
-    });
+    res.json({totalRequests: keyMonitorLogs.length,todayRequests: todayLogs.length,weeklyRequests: weekLogs.length,monthlyRequests: monthLogs.length,topKeys: topKeys});
 });
 
 app.use((req,res)=>{res.json({error:'Not found'})});
 
 // ============================================
-// V200 ULTRA CYBERPUNK LOGIN PAGE
+// 🎨 CYBERPUNK GLASSMORPHISM THEME CSS
 // ============================================
-function renderLogin(){
-    return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>BRONX V200 | CYBERPUNK</title><link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"><style>
-:root {
-  --bg-primary: #0a0a1a;
-  --bg-secondary: #0d0d24;
-  --bg-card: rgba(15, 15, 40, 0.6);
-  --border-color: rgba(99, 102, 241, 0.1);
-  --text-primary: #e2e8f0;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --accent-primary: #6366f1;
-  --accent-secondary: #8b5cf6;
-  --accent-tertiary: #a855f7;
-  --accent-glow: rgba(99, 102, 241, 0.3);
-  --gradient-primary: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7);
-  --gradient-rainbow: linear-gradient(90deg, #6366f1, #8b5cf6, #a855f7, #ec4899, #f43f5e, #6366f1);
-  --gradient-card: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.05));
-  --shadow-glow: 0 0 40px rgba(99, 102, 241, 0.15);
-  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.4);
-  --border-radius: 20px;
-  --glass-blur: blur(20px);
-}
-*{margin:0;padding:0;box-sizing:border-box}
-body{
-  background: var(--bg-primary);
-  font-family: 'Inter', sans-serif;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  position: relative;
-}
-/* Particle Canvas */
-#particles-canvas {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  pointer-events: none;
-}
-/* Snowfall Canvas */
-#snowfall-canvas {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-  pointer-events: none;
-}
-/* Floating Orbs */
-.orb {
-  position: fixed;
-  border-radius: 50%;
-  filter: blur(120px);
-  pointer-events: none;
-  z-index: 0;
-  animation: orbFloat 8s ease-in-out infinite;
-}
-.orb-1 { width: 400px; height: 400px; background: rgba(99, 102, 241, 0.08); top: -15%; left: -8%; animation-delay: 0s; }
-.orb-2 { width: 350px; height: 350px; background: rgba(139, 92, 246, 0.06); bottom: -12%; right: -6%; animation-delay: 3s; }
-.orb-3 { width: 300px; height: 300px; background: rgba(236, 72, 153, 0.04); top: 40%; left: 55%; animation-delay: 6s; }
-@keyframes orbFloat {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  25% { transform: translate(30px, -20px) scale(1.05); }
-  50% { transform: translate(-15px, 25px) scale(0.95); }
-  75% { transform: translate(-25px, -15px) scale(1.02); }
-}
-/* Grid Lines */
-.grid-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: 
-    linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
-  background-size: 60px 60px;
-  z-index: 0;
-  pointer-events: none;
-}
-/* Login Card */
-.login-container {
-  position: relative;
-  z-index: 10;
-  width: 440px;
-  max-width: 90vw;
-}
-.login-card {
-  background: var(--bg-card);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  padding: 50px 40px;
-  position: relative;
-  box-shadow: var(--shadow-card), var(--shadow-glow);
-  overflow: hidden;
-}
-.login-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: var(--gradient-rainbow);
-  background-size: 300% 300%;
-  animation: rainbowBorder 4s linear infinite;
-}
-.login-card::after {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: calc(var(--border-radius) + 2px);
-  padding: 2px;
-  background: var(--gradient-rainbow);
-  background-size: 400% 400%;
-  animation: rainbowBorder 4s linear infinite;
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-}
-@keyframes rainbowBorder {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 400% 50%; }
-}
-/* Logo */
-.login-logo {
-  text-align: center;
-  margin-bottom: 10px;
-}
-.login-logo .icon {
-  font-size: 50px;
-  display: inline-block;
-  animation: pulse 2s ease-in-out infinite;
-}
-@keyframes pulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.1); opacity: 0.8; }
-}
-.login-logo .brand {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 13px;
-  font-weight: 900;
-  letter-spacing: 10px;
-  background: var(--gradient-rainbow);
-  background-size: 300% 300%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: rainbowBorder 3s linear infinite;
-  margin-top: 6px;
-}
-.login-title {
-  text-align: center;
-  font-family: 'Orbitron', sans-serif;
-  font-size: 28px;
-  font-weight: 900;
-  color: var(--text-primary);
-  margin-bottom: 5px;
-  letter-spacing: 3px;
-}
-.login-subtitle {
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 11px;
-  letter-spacing: 5px;
-  text-transform: uppercase;
-  margin-bottom: 35px;
-}
-/* Input Fields */
-.input-group {
-  position: relative;
-  margin-bottom: 20px;
-}
-.input-group .input-icon {
-  position: absolute;
-  left: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-muted);
-  font-size: 16px;
-  transition: all 0.3s;
-  z-index: 2;
-}
-.input-group input {
-  width: 100%;
-  padding: 16px 16px 16px 48px;
-  background: rgba(10, 10, 30, 0.8);
-  border: 1.5px solid rgba(99, 102, 241, 0.15);
-  border-radius: 14px;
-  color: var(--text-primary);
-  font-family: 'Inter', sans-serif;
-  font-size: 14px;
-  outline: none;
-  transition: all 0.4s;
-  position: relative;
-}
-.input-group input:focus {
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 25px rgba(99, 102, 241, 0.2), 0 0 0 3px rgba(99, 102, 241, 0.05);
-  background: rgba(15, 15, 40, 0.9);
-}
-.input-group input:focus + .input-icon,
-.input-group input:focus ~ .input-icon {
-  color: var(--accent-primary);
-}
-.input-group input::placeholder {
-  color: var(--text-muted);
-  font-size: 12px;
-}
-/* Login Button */
-.login-btn {
-  width: 100%;
-  padding: 17px;
-  background: var(--gradient-rainbow);
-  background-size: 400% 400%;
-  color: #fff;
-  border: none;
-  border-radius: 14px;
-  cursor: pointer;
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: 4px;
-  font-family: 'Orbitron', sans-serif;
-  animation: rainbowBorder 4s ease infinite;
-  transition: all 0.3s;
-  position: relative;
-  overflow: hidden;
-}
-.login-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 15px 40px rgba(99, 102, 241, 0.3);
-}
-.login-btn:active {
-  transform: translateY(0);
-}
-.login-btn::after {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
-  transform: rotate(45deg);
-  animation: btnShine 3s infinite;
-}
-@keyframes btnShine {
-  0% { left: -100%; }
-  100% { left: 100%; }
-}
-/* Message */
-.message {
-  text-align: center;
-  margin-top: 16px;
-  font-size: 12px;
-  font-weight: 600;
-  min-height: 20px;
-  transition: all 0.3s;
-}
-/* Footer */
-.login-footer {
-  text-align: center;
-  margin-top: 25px;
-  font-size: 10px;
-  color: var(--text-muted);
-  letter-spacing: 2px;
-}
-.login-footer span {
-  background: var(--gradient-primary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  font-weight: 700;
-}
-/* Glow dots */
-.glow-dots {
-  position: absolute;
-  width: 6px;
-  height: 6px;
-  background: var(--accent-primary);
-  border-radius: 50%;
-  box-shadow: 0 0 15px var(--accent-primary);
-  animation: dotFloat 4s ease-in-out infinite;
-}
-.dot-1 { top: 20px; right: 30px; animation-delay: 0s; }
-.dot-2 { bottom: 30px; left: 25px; animation-delay: 1.5s; }
-.dot-3 { top: 50%; right: 15px; animation-delay: 3s; }
-@keyframes dotFloat {
-  0%, 100% { transform: translateY(0); opacity: 0.5; }
-  50% { transform: translateY(-10px); opacity: 1; }
-}
-</style></head><body>
-<div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div>
-<div class="grid-overlay"></div>
-<canvas id="particles-canvas"></canvas>
-<canvas id="snowfall-canvas"></canvas>
-<div class="login-container">
-  <div class="login-card">
-    <div class="glow-dots dot-1"></div>
-    <div class="glow-dots dot-2"></div>
-    <div class="glow-dots dot-3"></div>
-    <div class="login-logo">
-      <span class="icon">🛡️</span>
-      <div class="brand">BRONX OSINT</div>
-    </div>
-    <h2 class="login-title">V200 ULTRA</h2>
-    <p class="login-subtitle">Cyberpunk Dashboard</p>
-    <div class="input-group">
-      <i class="fas fa-user input-icon"></i>
-      <input type="text" id="username" placeholder="Username" autocomplete="off">
-    </div>
-    <div class="input-group">
-      <i class="fas fa-lock input-icon"></i>
-      <input type="password" id="password" placeholder="Password" autocomplete="off">
-    </div>
-    <button class="login-btn" onclick="login()">
-      <i class="fas fa-key"></i> AUTHENTICATE
-    </button>
-    <div class="message" id="message"></div>
-    <div class="login-footer">
-      Powered by <span>@BRONX_ULTRA</span>
-    </div>
-  </div>
-</div>
-<script>
-// ========== PARTICLE SYSTEM ==========
-const particleCanvas = document.getElementById('particles-canvas');
-const pctx = particleCanvas.getContext('2d');
-particleCanvas.width = window.innerWidth;
-particleCanvas.height = window.innerHeight;
-
-const particles = [];
-for (let i = 0; i < 80; i++) {
-  particles.push({
-    x: Math.random() * particleCanvas.width,
-    y: Math.random() * particleCanvas.height,
-    size: Math.random() * 2 + 0.5,
-    speedX: (Math.random() - 0.5) * 0.5,
-    speedY: (Math.random() - 0.5) * 0.5,
-    opacity: Math.random() * 0.6 + 0.1
-  });
-}
-
-function animateParticles() {
-  pctx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
-  particles.forEach(p => {
-    p.x += p.speedX;
-    p.y += p.speedY;
-    if (p.x < 0) p.x = particleCanvas.width;
-    if (p.x > particleCanvas.width) p.x = 0;
-    if (p.y < 0) p.y = particleCanvas.height;
-    if (p.y > particleCanvas.height) p.y = 0;
-    pctx.beginPath();
-    pctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-    pctx.fillStyle = 'rgba(99, 102, 241, ' + p.opacity + ')';
-    pctx.fill();
-  });
-  // Draw connections
-  particles.forEach((p, i) => {
-    particles.slice(i + 1).forEach(p2 => {
-      const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
-      if (dist < 120) {
-        pctx.beginPath();
-        pctx.moveTo(p.x, p.y);
-        pctx.lineTo(p2.x, p2.y);
-        pctx.strokeStyle = 'rgba(99, 102, 241, ' + (0.05 * (1 - dist / 120)) + ')';
-        pctx.lineWidth = 0.5;
-        pctx.stroke();
-      }
-    });
-  });
-  requestAnimationFrame(animateParticles);
-}
-animateParticles();
-
-// ========== SNOWFALL SYSTEM ==========
-const snowCanvas = document.getElementById('snowfall-canvas');
-const sctx = snowCanvas.getContext('2d');
-snowCanvas.width = window.innerWidth;
-snowCanvas.height = window.innerHeight;
-
-const snowflakes = [];
-for (let i = 0; i < 60; i++) {
-  snowflakes.push({
-    x: Math.random() * snowCanvas.width,
-    y: Math.random() * snowCanvas.height,
-    size: Math.random() * 3 + 1,
-    speed: Math.random() * 1 + 0.3,
-    wind: Math.random() * 0.5 - 0.25,
-    opacity: Math.random() * 0.5 + 0.1
-  });
-}
-
-function animateSnow() {
-  sctx.clearRect(0, 0, snowCanvas.width, snowCanvas.height);
-  snowflakes.forEach(s => {
-    s.y += s.speed;
-    s.x += s.wind;
-    if (s.y > snowCanvas.height) { s.y = -5; s.x = Math.random() * snowCanvas.width; }
-    if (s.x < 0) s.x = snowCanvas.width;
-    if (s.x > snowCanvas.width) s.x = 0;
-    sctx.beginPath();
-    sctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
-    sctx.fillStyle = 'rgba(200, 210, 255, ' + s.opacity + ')';
-    sctx.fill();
-  });
-  requestAnimationFrame(animateSnow);
-}
-animateSnow();
-
-window.addEventListener('resize', () => {
-  particleCanvas.width = window.innerWidth;
-  particleCanvas.height = window.innerHeight;
-  snowCanvas.width = window.innerWidth;
-  snowCanvas.height = window.innerHeight;
-});
-
-// ========== LOGIN ==========
-async function login() {
-  const u = document.getElementById('username').value.trim();
-  const p = document.getElementById('password').value.trim();
-  const msg = document.getElementById('message');
-  if (!u || !p) {
-    msg.style.color = '#f59e0b';
-    msg.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Please fill all fields';
-    return;
-  }
-  msg.style.color = '#6366f1';
-  msg.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
-  try {
-    const res = await fetch('/admin/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: u, password: p })
-    });
-    const data = await res.json();
-    if (data.success) {
-      msg.style.color = '#10b981';
-      msg.innerHTML = '<i class="fas fa-check-circle"></i> ' + data.message;
-      setTimeout(() => location.href = data.redirect, 600);
-    } else {
-      msg.style.color = '#ef4444';
-      msg.innerHTML = '<i class="fas fa-times-circle"></i> ' + data.error;
-    }
-  } catch(e) {
-    msg.style.color = '#ef4444';
-    msg.innerHTML = '<i class="fas fa-plug"></i> Connection error';
-  }
-}
-
-// Enter key support
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') login();
-});
-</script></body></html>`;
-}
-
-// ============================================
-// V200 ULTRA CYBERPUNK ADMIN PANEL
-// ============================================
-function renderAdmin(token){
-    try{
-        const allKeys=Object.entries(keyStorage).filter(([k,d])=>!d._hardcoded&&!d.hidden).map(([k,d])=>({
-            key:k, name:d.name||'?', limit:d.unlimited?'∞':d.limit, used:d.used||0,
-            left:d.unlimited?'∞':Math.max(0,(d.limit||0)-(d.used||0)),
-            dailyLimit:d.dailyLimit||0, perSecondLimit:d.perSecondLimit||0,
-            expiry:d.expiryStr||'Lifetime', isExpired:d.expiry?isKeyExpired(d.expiry):false,
-            scopes:d.scopes||[], cooldown:d.cooldown||0, created:d.created||''
-        }));
-        const hcCount=Object.values(keyStorage).filter(k=>k._hardcoded).length;
-        const todayReqs=requestLogs.filter(l=>l.timestamp&&l.timestamp.startsWith(getIndiaDate())).length;
-        const stoken=esc(token);
-        
-        let keysHTML=allKeys.map(k=>{
-            let s='🟢 ACTIVE';
-            if(k.isExpired){s='🔴 EXPIRED'} else if(k.left==0){s='🟠 LIMIT'}
-            const sd=k.scopes.includes('*')?'🌟 ALL':k.scopes.slice(0,2).join(',')+(k.scopes.length>2?'..':'');
-            return `<tr>
-                <td><code style="color:#818cf8">${esc(k.key.substring(0,12))}${k.key.length>12?'..':''}</code></td>
-                <td style="color:#c4b5fd">${esc(k.name)}</td>
-                <td>${k.limit}</td>
-                <td>${k.used}</td>
-                <td>${k.dailyLimit||'∞'}</td>
-                <td>${k.perSecondLimit||'∞'}/s</td>
-                <td style="color:${k.left==0?'#ef4444':'#818cf8'}">${k.left}</td>
-                <td>${esc(k.expiry)}</td>
-                <td style="color:#a78bfa">${sd}</td>
-                <td>${s}</td>
-                <td>${esc(k.created||'')}</td>
-                <td style="text-align:center">
-                    <button class="btn-action btn-reset" onclick="resetKey('${esc(k.key)}')" title="Reset Usage"><i class="fas fa-sync-alt"></i></button>
-                    <button class="btn-action btn-push" onclick="pushKey('${esc(k.key)}')" title="Push Days"><i class="fas fa-arrow-up"></i></button>
-                    <button class="btn-action btn-stop" onclick="stopKey('${esc(k.key)}')" title="Stop/Activate"><i class="fas fa-ban"></i></button>
-                    <button class="btn-action btn-delete" onclick="deleteKey('${esc(k.key)}')" title="Delete Key"><i class="fas fa-trash"></i></button>
-                </td></tr>`;
-        }).join('');
-        
-        const apiHTML=customAPIs.map(a=>`<tr>
-            <td>${a.id}</td>
-            <td style="color:#818cf8">${esc(a.name)}</td>
-            <td><code>/${esc(a.endpoint)}</code></td>
-            <td>${esc(a.param)}</td>
-            <td style="color:${a.visible?'#10b981':'#ef4444'}">${a.visible?'👁 Visible':'🙈 Hidden'}</td>
-            <td>
-                <button class="btn-action btn-push" onclick="toggleAPI(${a.id})">${a.visible?'<i class="fas fa-eye-slash"></i>':'<i class="fas fa-eye"></i>'}</button>
-                <button class="btn-action btn-delete" onclick="deleteAPI(${a.id})"><i class="fas fa-trash"></i></button>
-            </td></tr>`).join('');
-        
-        const protHTML=Object.keys(protectedData).map(v=>`<tr>
-            <td><code style="color:#f43f5e">${esc(v)}</code></td>
-            <td>🔒 Protected</td>
-            <td><button class="btn-action btn-delete" onclick="removeProt('${esc(v)}')"><i class="fas fa-unlock"></i></button></td>
-        </tr>`).join('')||'<tr><td colspan="3" style="color:#64748b">No protected data</td></tr>';
-        
-        const epHTML=Object.entries(endpoints).map(([n,e])=>`<tr>
-            <td>${e.i}</td>
-            <td><code style="color:#818cf8">/${n}</code></td>
-            <td>${e.d}</td>
-            <td><code>${e.p}=${e.e}</code></td>
-            <td><code class="copy-url" onclick="copyEndpoint('${n}','${e.p}','${e.e}')" style="cursor:pointer;color:#10b981">GET /api/key-bronx/${n}?key=KEY&${e.p}=${e.e}</code></td>
-        </tr>`).join('');
-
-        return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>BRONX V200 | CYBERPUNK DASHBOARD</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+const CYBERPUNK_CSS = `
 <style>
 :root {
-  --bg-primary: #0a0a1a;
-  --bg-secondary: #0d0d24;
-  --bg-card: rgba(15, 15, 40, 0.5);
-  --bg-card-hover: rgba(20, 20, 50, 0.6);
-  --border-color: rgba(99, 102, 241, 0.1);
-  --text-primary: #e2e8f0;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --accent-primary: #6366f1;
-  --accent-secondary: #8b5cf6;
-  --accent-tertiary: #a855f7;
-  --accent-success: #10b981;
-  --accent-warning: #f59e0b;
-  --accent-danger: #ef4444;
-  --accent-info: #06b6d4;
-  --gradient-primary: linear-gradient(135deg, #6366f1, #8b5cf6);
-  --gradient-rainbow: linear-gradient(90deg, #6366f1, #8b5cf6, #a855f7, #ec4899, #f43f5e, #6366f1);
-  --gradient-card: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(139, 92, 246, 0.04));
-  --shadow-glow: 0 0 40px rgba(99, 102, 241, 0.1);
+  --bg-primary: #090B12;
+  --bg-secondary: #111827;
+  --bg-card: rgba(20, 20, 35, 0.7);
+  --border-color: rgba(255, 255, 255, 0.08);
+  --text-primary: #FFFFFF;
+  --text-secondary: #A1A1AA;
+  --text-muted: #71717A;
+  --accent-primary: #7C3AED;
+  --accent-secondary: #6366F1;
+  --accent-success: #22C55E;
+  --accent-warning: #F59E0B;
+  --accent-danger: #EF4444;
+  --accent-info: #06B6D4;
+  --gradient-primary: linear-gradient(135deg, #7C3AED, #6366F1);
+  --gradient-rainbow: linear-gradient(90deg, #7C3AED, #6366F1, #A855F7, #EC4899, #7C3AED);
+  --shadow-glow: 0 0 25px rgba(124, 58, 237, 0.35);
   --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.4);
   --border-radius: 18px;
-  --glass-blur: blur(24px);
+  --glass-blur: blur(18px);
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 *{margin:0;padding:0;box-sizing:border-box}
@@ -1235,15 +620,13 @@ body{
   overflow-x: hidden;
   position: relative;
 }
-/* Background */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
   background: 
-    radial-gradient(ellipse at 50% -10%, rgba(99, 102, 241, 0.06), transparent 50%),
-    radial-gradient(ellipse at 80% 90%, rgba(139, 92, 246, 0.04), transparent 50%),
-    radial-gradient(ellipse at 20% 20%, rgba(236, 72, 153, 0.03), transparent 50%);
+    radial-gradient(ellipse at 50% 0%, rgba(124, 58, 237, 0.08), transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(99, 102, 241, 0.05), transparent 50%);
   pointer-events: none;
   z-index: 0;
 }
@@ -1251,42 +634,30 @@ body::before {
   position: fixed;
   inset: 0;
   background-image: 
-    linear-gradient(rgba(99, 102, 241, 0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(99, 102, 241, 0.02) 1px, transparent 1px);
+    linear-gradient(rgba(124, 58, 237, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124, 58, 237, 0.03) 1px, transparent 1px);
   background-size: 50px 50px;
   z-index: 0;
   pointer-events: none;
 }
-/* Particles */
-#particles-canvas {
+#particles-canvas, #snowfall-canvas {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 0;
   pointer-events: none;
 }
-/* Snowfall */
-#snowfall-canvas {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-  pointer-events: none;
-}
-/* Scrollbar */
+#particles-canvas { z-index: 0; }
+#snowfall-canvas { z-index: 1; }
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-track{background:var(--bg-primary)}
-::-webkit-scrollbar-thumb{background:linear-gradient(#6366f1,#8b5cf6,#a855f7);border-radius:10px}
-/* Top Nav */
+::-webkit-scrollbar-thumb{background:linear-gradient(#7C3AED,#6366F1);border-radius:10px}
 .topnav {
   position: sticky;
   top: 0;
   z-index: 1000;
-  background: rgba(10, 10, 26, 0.85);
+  background: rgba(9, 11, 18, 0.85);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border-bottom: 1px solid var(--border-color);
@@ -1313,11 +684,7 @@ body::before {
   0%{background-position:0% 50%}
   100%{background-position:300% 50%}
 }
-.topnav .nav-links {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
+.topnav .nav-links { display: flex; gap: 8px; align-items: center; }
 .topnav .nav-links a {
   color: var(--text-secondary);
   text-decoration: none;
@@ -1331,31 +698,14 @@ body::before {
 }
 .topnav .nav-links a:hover {
   color: var(--accent-primary);
-  border-color: rgba(99, 102, 241, 0.2);
-  background: rgba(99, 102, 241, 0.05);
+  border-color: rgba(124, 58, 237, 0.3);
+  background: rgba(124, 58, 237, 0.08);
 }
-.topnav .time {
-  color: var(--text-muted);
-  font-size: 9px;
-  font-family: monospace;
-}
-/* Container */
-.container {
-  max-width: 1500px;
-  margin: 0 auto;
-  padding: 24px;
-  position: relative;
-  z-index: 10;
-}
-/* Stat Cards */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 14px;
-  margin-bottom: 20px;
-}
+.topnav .time { color: var(--text-muted); font-size: 9px; font-family: monospace; }
+.container { max-width: 1500px; margin: 0 auto; padding: 24px; position: relative; z-index: 10; }
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 20px; }
 .stat-card {
-  background: var(--bg-card);
+  background: rgba(255, 255, 255, 0.04);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--border-color);
@@ -1381,14 +731,11 @@ body::before {
 }
 .stat-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-  border-color: rgba(99, 102, 241, 0.3);
+  box-shadow: 0 0 30px rgba(124, 58, 237, 0.25);
+  border-color: rgba(124, 58, 237, 0.3);
 }
 .stat-card:hover::before { opacity: 1; }
-.stat-card .stat-icon {
-  font-size: 28px;
-  margin-bottom: 8px;
-}
+.stat-card .stat-icon { font-size: 28px; margin-bottom: 8px; }
 .stat-card .stat-value {
   font-size: 30px;
   font-weight: 900;
@@ -1405,14 +752,13 @@ body::before {
   color: var(--text-muted);
   margin-top: 4px;
 }
-/* Tabs */
 .tabs-container {
   display: flex;
   gap: 6px;
   margin-bottom: 16px;
   flex-wrap: wrap;
   padding: 6px;
-  background: var(--bg-card);
+  background: rgba(255, 255, 255, 0.04);
   border-radius: 14px;
   border: 1px solid var(--border-color);
   backdrop-filter: var(--glass-blur);
@@ -1431,18 +777,20 @@ body::before {
   font-family: 'Inter', sans-serif;
   white-space: nowrap;
 }
-.tab:hover { color: var(--text-primary); background: rgba(99, 102, 241, 0.05); }
+.tab:hover { color: var(--text-primary); background: rgba(124, 58, 237, 0.08); }
 .tab.active {
-  background: rgba(99, 102, 241, 0.1);
+  background: rgba(124, 58, 237, 0.15);
   color: #fff;
-  box-shadow: 0 0 20px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 0 20px rgba(124, 58, 237, 0.2);
 }
-/* Panels */
 .panel { display: none; }
-.panel.active { display: block; }
-/* Cards */
+.panel.active { display: block; animation: fadeIn 0.4s ease; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 .card {
-  background: var(--bg-card);
+  background: rgba(255, 255, 255, 0.04);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--border-color);
@@ -1451,9 +799,7 @@ body::before {
   margin-bottom: 16px;
   transition: var(--transition);
 }
-.card:hover {
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-}
+.card:hover { box-shadow: 0 0 30px rgba(124, 58, 237, 0.15); }
 .card-header {
   font-family: 'Orbitron', sans-serif;
   font-size: 16px;
@@ -1465,22 +811,11 @@ body::before {
   align-items: center;
   gap: 10px;
 }
-.card-header i {
-  color: var(--accent-primary);
-}
-/* Tables */
-.table-container {
-  max-height: 450px;
-  overflow: auto;
-  border-radius: 12px;
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 11px;
-}
+.card-header i { color: var(--accent-primary); }
+.table-container { max-height: 450px; overflow: auto; border-radius: 12px; }
+table { width: 100%; border-collapse: collapse; font-size: 11px; }
 th {
-  background: rgba(99, 102, 241, 0.04);
+  background: rgba(124, 58, 237, 0.06);
   color: var(--text-muted);
   padding: 12px 10px;
   text-align: left;
@@ -1492,22 +827,16 @@ th {
   top: 0;
   z-index: 2;
 }
-td {
-  padding: 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.02);
-  color: var(--text-secondary);
-}
-tr:hover td {
-  background: rgba(99, 102, 241, 0.03);
-}
+td { padding: 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.03); color: var(--text-secondary); }
+tr:hover td { background: rgba(124, 58, 237, 0.04); }
 code {
   font-family: 'Space Grotesk', monospace;
   font-size: 10px;
-  background: rgba(99, 102, 241, 0.08);
+  background: rgba(124, 58, 237, 0.1);
   padding: 3px 7px;
   border-radius: 6px;
+  color: #A78BFA;
 }
-/* Buttons */
 .btn-cyber {
   padding: 13px 28px;
   background: var(--gradient-rainbow);
@@ -1526,7 +855,7 @@ code {
 }
 .btn-cyber:hover {
   transform: translateY(-2px);
-  box-shadow: 0 15px 40px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 0 30px rgba(124, 58, 237, 0.4);
 }
 .btn-action {
   padding: 6px 10px;
@@ -1539,20 +868,15 @@ code {
   margin: 2px;
   font-family: 'Inter', sans-serif;
 }
-.btn-reset { color: #10b981; border-color: rgba(16, 185, 129, 0.3); }
-.btn-reset:hover { background: rgba(16, 185, 129, 0.1); }
-.btn-push { color: #f59e0b; border-color: rgba(245, 158, 11, 0.3); }
-.btn-push:hover { background: rgba(245, 158, 11, 0.1); }
-.btn-stop { color: #ef4444; border-color: rgba(239, 68, 68, 0.3); }
-.btn-stop:hover { background: rgba(239, 68, 68, 0.1); }
-.btn-delete { color: #ec4899; border-color: rgba(236, 72, 153, 0.3); }
-.btn-delete:hover { background: rgba(236, 72, 153, 0.1); }
-/* Forms */
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 14px;
-}
+.btn-reset { color: #22C55E; border-color: rgba(34, 197, 94, 0.3); }
+.btn-reset:hover { background: rgba(34, 197, 94, 0.1); box-shadow: 0 0 15px rgba(34, 197, 94, 0.2); }
+.btn-push { color: #F59E0B; border-color: rgba(245, 158, 11, 0.3); }
+.btn-push:hover { background: rgba(245, 158, 11, 0.1); box-shadow: 0 0 15px rgba(245, 158, 11, 0.2); }
+.btn-stop { color: #EF4444; border-color: rgba(239, 68, 68, 0.3); }
+.btn-stop:hover { background: rgba(239, 68, 68, 0.1); box-shadow: 0 0 15px rgba(239, 68, 68, 0.2); }
+.btn-delete { color: #EC4899; border-color: rgba(236, 72, 153, 0.3); }
+.btn-delete:hover { background: rgba(236, 72, 153, 0.1); box-shadow: 0 0 15px rgba(236, 72, 153, 0.2); }
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
 .form-group label {
   display: block;
   color: var(--text-muted);
@@ -1562,12 +886,11 @@ code {
   margin-bottom: 6px;
   font-weight: 600;
 }
-.form-group input,
-.form-group select {
+.form-group input, .form-group select {
   width: 100%;
   padding: 12px 16px;
-  background: rgba(10, 10, 30, 0.8);
-  border: 1.5px solid rgba(99, 102, 241, 0.15);
+  background: rgba(9, 11, 18, 0.8);
+  border: 1.5px solid rgba(124, 58, 237, 0.2);
   border-radius: 12px;
   color: #fff;
   font-size: 13px;
@@ -1575,18 +898,16 @@ code {
   outline: none;
   transition: var(--transition);
 }
-.form-group input:focus,
-.form-group select:focus {
+.form-group input:focus, .form-group select:focus {
   border-color: var(--accent-primary);
-  box-shadow: 0 0 20px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 0 20px rgba(124, 58, 237, 0.2);
 }
-/* Scope checkboxes */
 .scope-box {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   padding: 12px;
-  background: rgba(10, 10, 30, 0.5);
+  background: rgba(9, 11, 18, 0.5);
   border: 1px solid var(--border-color);
   border-radius: 12px;
   max-height: 150px;
@@ -1603,21 +924,15 @@ code {
   padding: 4px 8px;
   border-radius: 6px;
 }
-.scope-box label:hover {
-  color: var(--accent-primary);
-  background: rgba(99, 102, 241, 0.05);
-}
-.scope-box input[type="checkbox"] {
-  accent-color: var(--accent-primary);
-}
-/* Textarea */
+.scope-box label:hover { color: var(--accent-primary); background: rgba(124, 58, 237, 0.08); }
+.scope-box input[type="checkbox"] { accent-color: var(--accent-primary); }
 textarea {
   width: 100%;
   height: 200px;
-  background: rgba(10, 10, 30, 0.8);
-  border: 1.5px solid rgba(99, 102, 241, 0.15);
+  background: rgba(9, 11, 18, 0.8);
+  border: 1.5px solid rgba(124, 58, 237, 0.2);
   border-radius: 14px;
-  color: #a78bfa;
+  color: #A78BFA;
   font-size: 12px;
   padding: 16px;
   font-family: 'Space Grotesk', monospace;
@@ -1625,13 +940,9 @@ textarea {
   outline: none;
   transition: var(--transition);
 }
-textarea:focus {
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 20px rgba(99, 102, 241, 0.15);
-}
-/* Live Logs */
+textarea:focus { border-color: var(--accent-primary); box-shadow: 0 0 20px rgba(124, 58, 237, 0.2); }
 .live-logs {
-  background: rgba(5, 5, 20, 0.9);
+  background: rgba(5, 5, 15, 0.9);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
   padding: 16px;
@@ -1648,11 +959,10 @@ textarea:focus {
   flex-wrap: wrap;
 }
 .log-time { color: var(--text-muted); }
-.log-key { color: #818cf8; }
-.log-endpoint { color: #a78bfa; }
-.log-ip { color: #f59e0b; }
-.log-browser { color: #10b981; }
-/* Toast */
+.log-key { color: #A78BFA; }
+.log-endpoint { color: #C4B5FD; }
+.log-ip { color: #F59E0B; }
+.log-browser { color: #22C55E; }
 .toast {
   position: fixed;
   top: 20px;
@@ -1665,34 +975,191 @@ textarea:focus {
   font-size: 13px;
   animation: slideIn 0.4s ease;
   max-width: 400px;
+  backdrop-filter: blur(10px);
 }
-.toast.success { background: rgba(16, 185, 129, 0.9); }
-.toast.error { background: rgba(239, 68, 68, 0.9); }
+.toast.success { background: rgba(34, 197, 94, 0.9); box-shadow: 0 0 25px rgba(34, 197, 94, 0.3); }
+.toast.error { background: rgba(239, 68, 68, 0.9); box-shadow: 0 0 25px rgba(239, 68, 68, 0.3); }
 @keyframes slideIn {
   from { transform: translateX(100%); opacity: 0; }
   to { transform: translateX(0); opacity: 1; }
 }
-/* Responsive */
+.copy-url { cursor: pointer; transition: var(--transition); color: #22C55E; }
+.copy-url:hover { text-shadow: 0 0 10px rgba(34, 197, 94, 0.5); }
+/* Sidebar-like category sections */
+.category-section {
+  margin-bottom: 20px;
+}
+.category-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent-primary);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 12px;
+}
 @media(max-width:768px){
   .stats-grid{grid-template-columns:repeat(2,1fr)}
   .form-grid{grid-template-columns:1fr}
   .topnav{padding:10px 16px}
   .tabs-container{overflow-x:auto;flex-wrap:nowrap}
 }
-/* Copy URL */
-.copy-url {
-  cursor: pointer;
-  transition: var(--transition);
+</style>`;
+
+// ============================================
+// V200 ULTRA CYBERPUNK LOGIN PAGE
+// ============================================
+function renderLogin(){
+    return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>BRONX V200 | CYBERPUNK</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+${CYBERPUNK_CSS}
+<style>
+body{display:flex;align-items:center;justify-content:center;overflow:hidden}
+.login-container{position:relative;z-index:10;width:440px;max-width:90vw}
+.login-card{
+  background:rgba(20,20,35,0.7);
+  backdrop-filter:blur(18px);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:20px;
+  padding:50px 40px;
+  position:relative;
+  box-shadow:0 0 40px rgba(124,58,237,0.15),0 8px 32px rgba(0,0,0,0.4);
+  overflow:hidden;
 }
-.copy-url:hover {
-  color: var(--accent-success) !important;
-}
+.login-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--gradient-rainbow);background-size:300% 300%;animation:rainbowShift 4s linear infinite}
+.login-logo{text-align:center;margin-bottom:10px}
+.login-logo .icon{font-size:50px;display:inline-block;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.1);opacity:0.8}}
+.login-logo .brand{font-family:'Orbitron',sans-serif;font-size:13px;font-weight:900;letter-spacing:10px;background:var(--gradient-rainbow);background-size:300% 300%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:rainbowShift 3s linear infinite;margin-top:6px}
+.login-title{text-align:center;font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;color:#fff;margin-bottom:5px;letter-spacing:3px}
+.login-subtitle{text-align:center;color:var(--text-muted);font-size:11px;letter-spacing:5px;text-transform:uppercase;margin-bottom:35px}
+.input-group{position:relative;margin-bottom:20px}
+.input-group .input-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:16px;transition:.3s;z-index:2}
+.input-group input{width:100%;padding:16px 16px 16px 48px;background:rgba(9,11,18,0.8);border:1.5px solid rgba(124,58,237,0.2);border-radius:14px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;outline:none;transition:.4s}
+.input-group input:focus{border-color:var(--accent-primary);box-shadow:0 0 25px rgba(124,58,237,0.2)}
+.input-group input:focus~.input-icon{color:var(--accent-primary)}
+.login-btn{width:100%;padding:17px;background:var(--gradient-rainbow);background-size:400% 400%;color:#fff;border:none;border-radius:14px;cursor:pointer;font-size:15px;font-weight:700;letter-spacing:4px;font-family:'Orbitron',sans-serif;animation:rainbowShift 4s ease infinite;transition:.3s;position:relative;overflow:hidden}
+.login-btn:hover{transform:translateY(-3px);box-shadow:0 0 40px rgba(124,58,237,0.4)}
+.message{text-align:center;margin-top:16px;font-size:12px;font-weight:600;min-height:20px}
+.login-footer{text-align:center;margin-top:25px;font-size:10px;color:var(--text-muted);letter-spacing:2px}
+.login-footer span{background:var(--gradient-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:700}
+.glow-dots{position:absolute;width:6px;height:6px;background:var(--accent-primary);border-radius:50%;box-shadow:0 0 15px var(--accent-primary);animation:dotFloat 4s ease-in-out infinite}
+.dot-1{top:20px;right:30px;animation-delay:0s}
+.dot-2{bottom:30px;left:25px;animation-delay:1.5s}
+.dot-3{top:50%;right:15px;animation-delay:3s}
+@keyframes dotFloat{0%,100%{transform:translateY(0);opacity:0.5}50%{transform:translateY(-10px);opacity:1}}
 </style></head><body>
 <div class="grid-bg"></div>
 <canvas id="particles-canvas"></canvas>
 <canvas id="snowfall-canvas"></canvas>
+<div class="login-container"><div class="login-card">
+<div class="glow-dots dot-1"></div><div class="glow-dots dot-2"></div><div class="glow-dots dot-3"></div>
+<div class="login-logo"><span class="icon">🛡️</span><div class="brand">BRONX OSINT</div></div>
+<h2 class="login-title">V200 ULTRA</h2>
+<p class="login-subtitle">Cyberpunk Dashboard</p>
+<div class="input-group"><i class="fas fa-user input-icon"></i><input type="text" id="username" placeholder="Username" autocomplete="off"></div>
+<div class="input-group"><i class="fas fa-lock input-icon"></i><input type="password" id="password" placeholder="Password" autocomplete="off"></div>
+<button class="login-btn" onclick="login()"><i class="fas fa-key"></i> AUTHENTICATE</button>
+<div class="message" id="message"></div>
+<div class="login-footer">Powered by <span>@BRONX_ULTRA</span></div>
+</div></div>
+<script>
+const pc=document.getElementById('particles-canvas'),pctx=pc.getContext('2d');pc.width=window.innerWidth;pc.height=window.innerHeight;
+const parts=[];for(let i=0;i<80;i++)parts.push({x:Math.random()*pc.width,y:Math.random()*pc.height,s:Math.random()*2+.5,vx:(Math.random()-.5)*.5,vy:(Math.random()-.5)*.5,o:Math.random()*.6+.1});
+function ap(){pctx.clearRect(0,0,pc.width,pc.height);parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=pc.width;if(p.x>pc.width)p.x=0;if(p.y<0)p.y=pc.height;if(p.y>pc.height)p.y=0;pctx.beginPath();pctx.arc(p.x,p.y,p.s,0,Math.PI*2);pctx.fillStyle='rgba(124,58,237,'+p.o+')';pctx.fill()});parts.forEach((p,i)=>{parts.slice(i+1).forEach(p2=>{const d=Math.hypot(p.x-p2.x,p.y-p2.y);if(d<120){pctx.beginPath();pctx.moveTo(p.x,p.y);pctx.lineTo(p2.x,p2.y);pctx.strokeStyle='rgba(124,58,237,'+(0.05*(1-d/120))+')';pctx.lineWidth=0.5;pctx.stroke()}})});requestAnimationFrame(ap)}ap();
+const sc=document.getElementById('snowfall-canvas'),sctx=sc.getContext('2d');sc.width=window.innerWidth;sc.height=window.innerHeight;
+const snow=[];for(let i=0;i<60;i++)snow.push({x:Math.random()*sc.width,y:Math.random()*sc.height,s:Math.random()*3+1,sp:Math.random()*1+.3,w:Math.random()*.5-.25,o:Math.random()*.5+.1});
+function as(){sctx.clearRect(0,0,sc.width,sc.height);snow.forEach(s=>{s.y+=s.sp;s.x+=s.w;if(s.y>sc.height){s.y=-5;s.x=Math.random()*sc.width}if(s.x<0)s.x=sc.width;if(s.x>sc.width)s.x=0;sctx.beginPath();sctx.arc(s.x,s.y,s.s,0,Math.PI*2);sctx.fillStyle='rgba(200,210,255,'+s.o+')';sctx.fill()});requestAnimationFrame(as)}as();
+async function login(){
+const u=document.getElementById('username').value.trim(),p=document.getElementById('password').value.trim(),m=document.getElementById('message');
+if(!u||!p){m.style.color='#F59E0B';m.innerHTML='<i class="fas fa-exclamation-triangle"></i> Fill all fields';return}
+m.style.color='#7C3AED';m.innerHTML='<i class="fas fa-spinner fa-spin"></i> Authenticating...';
+try{const r=await fetch('/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});const d=await r.json();
+if(d.success){m.style.color='#22C55E';m.innerHTML='<i class="fas fa-check-circle"></i> '+d.message;setTimeout(()=>location.href=d.redirect,600)}
+else{m.style.color='#EF4444';m.innerHTML='<i class="fas fa-times-circle"></i> '+d.error}}catch(e){m.style.color='#EF4444';m.innerHTML='<i class="fas fa-plug"></i> Connection error'}}
+document.addEventListener('keydown',(e)=>{if(e.key==='Enter')login()});
+</script></body></html>`;
+}
 
-<!-- Top Navigation -->
+// ============================================
+// V200 ULTRA CYBERPUNK ADMIN PANEL
+// ============================================
+function renderAdmin(token){
+    try{
+        const allKeys=Object.entries(keyStorage).filter(([k,d])=>!d._hardcoded&&!d.hidden).map(([k,d])=>({
+            key:k, name:d.name||'?', limit:d.unlimited?'∞':d.limit, used:d.used||0,
+            left:d.unlimited?'∞':Math.max(0,(d.limit||0)-(d.used||0)),
+            dailyLimit:d.dailyLimit||0, perSecondLimit:d.perSecondLimit||0,
+            expiry:d.expiryStr||'Lifetime', isExpired:d.expiry?isKeyExpired(d.expiry):false,
+            scopes:d.scopes||[], cooldown:d.cooldown||0, created:d.created||''
+        }));
+        const hcCount=Object.values(keyStorage).filter(k=>k._hardcoded).length;
+        const todayReqs=requestLogs.filter(l=>l.timestamp&&l.timestamp.startsWith(getIndiaDate())).length;
+        const stoken=esc(token);
+        
+        let keysHTML=allKeys.map(k=>{
+            let s='🟢 ACTIVE';
+            if(k.isExpired){s='🔴 EXPIRED'} else if(k.left==0){s='🟠 LIMIT'}
+            const sd=k.scopes.includes('*')?'🌟 ALL':k.scopes.slice(0,2).join(',')+(k.scopes.length>2?'..':'');
+            return `<tr>
+                <td><code>${esc(k.key.substring(0,12))}${k.key.length>12?'..':''}</code></td>
+                <td style="color:#C4B5FD">${esc(k.name)}</td><td>${k.limit}</td><td>${k.used}</td>
+                <td>${k.dailyLimit||'∞'}</td><td>${k.perSecondLimit||'∞'}/s</td>
+                <td style="color:${k.left==0?'#EF4444':'#A78BFA'}">${k.left}</td>
+                <td>${esc(k.expiry)}</td><td style="color:#C4B5FD">${sd}</td><td>${s}</td><td>${esc(k.created||'')}</td>
+                <td style="text-align:center">
+                    <button class="btn-action btn-reset" onclick="resetKey('${esc(k.key)}')" title="Reset"><i class="fas fa-sync-alt"></i></button>
+                    <button class="btn-action btn-push" onclick="pushKey('${esc(k.key)}')" title="Push"><i class="fas fa-arrow-up"></i></button>
+                    <button class="btn-action btn-stop" onclick="stopKey('${esc(k.key)}')" title="Stop"><i class="fas fa-ban"></i></button>
+                    <button class="btn-action btn-delete" onclick="deleteKey('${esc(k.key)}')" title="Delete"><i class="fas fa-trash"></i></button>
+                </td></tr>`;
+        }).join('');
+        
+        const apiHTML=customAPIs.map(a=>`<tr>
+            <td>${a.id}</td><td style="color:#A78BFA">${esc(a.name)}</td><td><code>/${esc(a.endpoint)}</code></td>
+            <td>${esc(a.param)}</td><td style="color:${a.visible?'#22C55E':'#EF4444'}">${a.visible?'👁 Visible':'🙈 Hidden'}</td>
+            <td>
+                <button class="btn-action btn-push" onclick="toggleAPI(${a.id})">${a.visible?'<i class="fas fa-eye-slash"></i>':'<i class="fas fa-eye"></i>'}</button>
+                <button class="btn-action btn-delete" onclick="deleteAPI(${a.id})"><i class="fas fa-trash"></i></button>
+            </td></tr>`).join('');
+        
+        const protHTML=Object.keys(protectedData).map(v=>`<tr>
+            <td><code style="color:#EF4444">${esc(v)}</code></td><td>🔒 Protected</td>
+            <td><button class="btn-action btn-delete" onclick="removeProt('${esc(v)}')"><i class="fas fa-unlock"></i></button></td>
+        </tr>`).join('')||'<tr><td colspan="3" style="color:var(--text-muted)">No protected data</td></tr>';
+        
+        // Group endpoints by category
+        const categories = {};
+        Object.entries(endpoints).forEach(([n,e])=>{
+            const cat = e.c || 'other';
+            if(!categories[cat]) categories[cat] = [];
+            categories[cat].push({name:n, ...e});
+        });
+        
+        const epHTML = Object.entries(categories).map(([cat, eps])=>`
+            <div class="category-section">
+                <div class="category-title">📂 ${cat.toUpperCase()}</div>
+                <div class="table-container" style="max-height:none">
+                    <table><thead><tr><th>Icon</th><th>Endpoint</th><th>Description</th><th>Example</th><th>Full URL</th></tr></thead>
+                    <tbody>${eps.map(e=>`<tr>
+                        <td>${e.i}</td><td><code>/${e.name}</code></td><td>${e.d}</td><td><code>${e.p}=${e.e}</code></td>
+                        <td><code class="copy-url" onclick="copyEndpoint('${e.name}','${e.p}','${e.e}')" style="cursor:pointer">GET /api/key-bronx/${e.name}?key=KEY&${e.p}=${e.e}</code></td>
+                    </tr>`).join('')}</tbody></table>
+                </div>
+            </div>
+        `).join('');
+
+        return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>BRONX V200 | CYBERPUNK DASHBOARD</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+${CYBERPUNK_CSS}
+</head><body>
+<div class="grid-bg"></div>
+<canvas id="particles-canvas"></canvas>
+<canvas id="snowfall-canvas"></canvas>
 <nav class="topnav">
   <span class="brand">🛡️ BRONX V200</span>
   <span class="time" id="liveTime">${getIndiaDateTime()}</span>
@@ -1702,26 +1169,23 @@ textarea:focus {
     <a href="/admin"><i class="fas fa-sign-out-alt"></i> Logout</a>
   </div>
 </nav>
-
 <div class="container">
-  <!-- Stats Grid -->
   <div class="stats-grid">
     <div class="stat-card"><div class="stat-icon">🔑</div><div class="stat-value">${allKeys.length}</div><div class="stat-label">Gen Keys</div></div>
     <div class="stat-card"><div class="stat-icon">💎</div><div class="stat-value">${hcCount}</div><div class="stat-label">Hardcoded</div></div>
-    <div class="stat-card"><div class="stat-icon">📊</div><div class="stat-value" id="statToday">${todayReqs}</div><div class="stat-label">Today Requests</div></div>
-    <div class="stat-card"><div class="stat-icon">📈</div><div class="stat-value" id="statTotal">${requestLogs.length}</div><div class="stat-label">Total Requests</div></div>
+    <div class="stat-card"><div class="stat-icon">📊</div><div class="stat-value" id="statToday">${todayReqs}</div><div class="stat-label">Today</div></div>
+    <div class="stat-card"><div class="stat-icon">📈</div><div class="stat-value" id="statTotal">${requestLogs.length}</div><div class="stat-label">Total</div></div>
     <div class="stat-card"><div class="stat-icon">🔒</div><div class="stat-value">${Object.keys(protectedData).length}</div><div class="stat-label">Protected</div></div>
     <div class="stat-card"><div class="stat-icon">🔌</div><div class="stat-value">${customAPIs.length}</div><div class="stat-label">Custom APIs</div></div>
   </div>
 
-  <!-- Tabs -->
   <div class="tabs-container">
     <button class="tab active" onclick="switchTab('dashboard')"><i class="fas fa-chart-pie"></i> Dashboard</button>
     <button class="tab" onclick="switchTab('generate')"><i class="fas fa-plus-circle"></i> Generate</button>
     <button class="tab" onclick="switchTab('keys')"><i class="fas fa-key"></i> Keys</button>
+    <button class="tab" onclick="switchTab('endpoints')"><i class="fas fa-list"></i> Endpoints</button>
     <button class="tab" onclick="switchTab('import')"><i class="fas fa-download"></i> Import</button>
     <button class="tab" onclick="switchTab('export')"><i class="fas fa-upload"></i> Export</button>
-    <button class="tab" onclick="switchTab('endpoints')"><i class="fas fa-list"></i> Endpoints</button>
     <button class="tab" onclick="switchTab('scopes')"><i class="fas fa-crosshairs"></i> Scopes</button>
     <button class="tab" onclick="switchTab('push')"><i class="fas fa-arrow-up"></i> Push</button>
     <button class="tab" onclick="switchTab('protect')"><i class="fas fa-shield-alt"></i> Protect</button>
@@ -1732,10 +1196,8 @@ textarea:focus {
     <button class="tab" onclick="switchTab('settings')"><i class="fas fa-cog"></i> Settings</button>
   </div>
 
-  <!-- Dashboard Panel -->
   <div class="panel active" id="panel-dashboard">
-    <div class="card">
-      <div class="card-header"><i class="fas fa-fire"></i> Request Overview</div>
+    <div class="card"><div class="card-header"><i class="fas fa-fire"></i> Request Overview</div>
       <div class="stats-grid" style="margin-bottom:0">
         <div class="stat-card"><div class="stat-value" id="dashToday">-</div><div class="stat-label">Today</div></div>
         <div class="stat-card"><div class="stat-value" id="dashWeek">-</div><div class="stat-label">This Week</div></div>
@@ -1743,224 +1205,150 @@ textarea:focus {
         <div class="stat-card"><div class="stat-value" id="dashTotal">-</div><div class="stat-label">All Time</div></div>
       </div>
     </div>
-    <div class="card">
-      <div class="card-header"><i class="fas fa-trophy"></i> Top 5 Keys</div>
-      <div class="table-container">
-        <table><thead><tr><th>Key</th><th>Requests</th><th>Last IP</th><th>Browser</th></tr></thead>
-        <tbody id="topKeysBody"><tr><td colspan="4" style="text-align:center;color:var(--text-muted)">Loading...</td></tr></tbody></table>
-      </div>
+    <div class="card"><div class="card-header"><i class="fas fa-trophy"></i> Top 5 Keys</div>
+      <div class="table-container"><table><thead><tr><th>Key</th><th>Requests</th><th>Last IP</th><th>Browser</th></tr></thead>
+        <tbody id="topKeysBody"><tr><td colspan="4" style="text-align:center;color:var(--text-muted)">Loading...</td></tr></tbody></table></div>
     </div>
   </div>
 
-  <!-- Generate Panel -->
   <div class="panel" id="panel-generate">
-    <div class="card">
-      <div class="card-header"><i class="fas fa-wand-magic-sparkles"></i> Generate New API Key</div>
+    <div class="card"><div class="card-header"><i class="fas fa-wand-magic-sparkles"></i> Generate New API Key</div>
       <div class="form-grid">
         <div class="form-group"><label>Key ID</label><input id="gk" placeholder="MY_KEY_NAME"></div>
         <div class="form-group"><label>Owner Name</label><input id="go" placeholder="Client Name"></div>
         <div class="form-group"><label>Total Limit</label><input id="gl" type="number" value="100"></div>
         <div class="form-group"><label>Daily Limit (0=∞)</label><input id="gdl" type="number" value="0"></div>
-        <div class="form-group"><label>Per Second Limit (0=∞)</label><input id="gpsl" type="number" value="0" placeholder="e.g., 5 = 5 requests/sec"></div>
-        <div class="form-group"><label>Cooldown (seconds)</label><input id="gc" type="number" value="0"></div>
+        <div class="form-group"><label>Per Second (0=∞)</label><input id="gpsl" type="number" value="0"></div>
+        <div class="form-group"><label>Cooldown (sec)</label><input id="gc" type="number" value="0"></div>
         <div class="form-group"><label>Days Valid</label><input id="gd" type="number" value="30"></div>
-        <div style="grid-column:1/-1" class="form-group">
-          <label>Scopes</label>
+        <div style="grid-column:1/-1" class="form-group"><label>Scopes</label>
           <div class="scope-box">
             <label><input type="checkbox" value="*" id="scope-all" checked> 🌟 ALL</label>
             ${Object.keys(endpoints).map(e=>`<label><input type="checkbox" value="${e}" class="scope-cb"> ${endpoints[e].i} ${e}</label>`).join('')}
-            <label><input type="checkbox" value="custom" class="scope-cb"> 🔧 Custom APIs</label>
+            <label><input type="checkbox" value="custom" class="scope-cb"> 🔧 Custom</label>
           </div>
         </div>
-        <div style="grid-column:1/-1">
-          <button class="btn-cyber" onclick="generateKey()" style="width:100%"><i class="fas fa-rocket"></i> GENERATE KEY</button>
-        </div>
+        <div style="grid-column:1/-1"><button class="btn-cyber" onclick="generateKey()" style="width:100%"><i class="fas fa-rocket"></i> GENERATE KEY</button></div>
       </div>
     </div>
   </div>
 
-  <!-- Keys Panel -->
   <div class="panel" id="panel-keys">
-    <div class="card">
-      <div class="card-header"><i class="fas fa-key"></i> All Keys (${allKeys.length})</div>
-      <div class="table-container">
-        <table><thead><tr><th>KEY</th><th>OWNER</th><th>LIMIT</th><th>USED</th><th>DAY</th><th>/SEC</th><th>LEFT</th><th>EXPIRY</th><th>SCOPES</th><th>STATUS</th><th>CREATED</th><th>ACTIONS</th></tr></thead>
-        <tbody>${keysHTML}</tbody></table>
-      </div>
+    <div class="card"><div class="card-header"><i class="fas fa-key"></i> All Keys (${allKeys.length})</div>
+      <div class="table-container"><table><thead><tr><th>KEY</th><th>OWNER</th><th>LIMIT</th><th>USED</th><th>DAY</th><th>/SEC</th><th>LEFT</th><th>EXPIRY</th><th>SCOPES</th><th>STATUS</th><th>CREATED</th><th>ACTIONS</th></tr></thead><tbody>${keysHTML}</tbody></table></div>
     </div>
   </div>
 
-  <!-- Import Panel -->
+  <div class="panel" id="panel-endpoints">
+    <div class="card"><div class="card-header"><i class="fas fa-list"></i> API Endpoints Documentation (${Object.keys(endpoints).length})</div>
+      ${epHTML}
+    </div>
+  </div>
+
   <div class="panel" id="panel-import">
-    <div class="card">
-      <div class="card-header"><i class="fas fa-download"></i> Import Keys (JSON)</div>
-      <p style="color:var(--text-muted);font-size:11px;margin-bottom:12px">Paste exported JSON data. Supports both {"KEY":"data"} and nested formats.</p>
-      <textarea id="importData" placeholder='{"MY_KEY":{"name":"User","scopes":["*"],"limit":100,"expiryStr":"LIFETIME",...}}'></textarea>
+    <div class="card"><div class="card-header"><i class="fas fa-download"></i> Import Keys (JSON)</div>
+      <p style="color:var(--text-muted);font-size:11px;margin-bottom:12px">Paste JSON data. Supports nested formats.</p>
+      <textarea id="importData" placeholder='{"MY_KEY":{"name":"User","scopes":["*"],"limit":100,...}}'></textarea>
       <button class="btn-cyber" onclick="importKeys()" style="width:100%;margin-top:12px"><i class="fas fa-download"></i> IMPORT KEYS</button>
       <p id="importMsg" style="margin-top:10px;text-align:center;font-size:12px"></p>
     </div>
   </div>
 
-  <!-- Export Panel -->
   <div class="panel" id="panel-export">
-    <div class="card">
-      <div class="card-header"><i class="fas fa-upload"></i> Export Keys</div>
-      <p style="color:var(--text-muted);font-size:11px;margin-bottom:12px">Exports all generated keys (hardcoded excluded).</p>
-      <textarea id="exportData" readonly style="color:#a78bfa"></textarea>
+    <div class="card"><div class="card-header"><i class="fas fa-upload"></i> Export Keys</div>
+      <p style="color:var(--text-muted);font-size:11px;margin-bottom:12px">Exports all generated keys.</p>
+      <textarea id="exportData" readonly style="color:#A78BFA"></textarea>
       <button class="btn-cyber" onclick="loadExport()" style="width:100%;margin-top:8px"><i class="fas fa-sync"></i> LOAD EXPORT DATA</button>
-      <button class="btn-cyber" onclick="copyExport()" style="width:100%;margin-top:8px;background:linear-gradient(135deg,#10b981,#06b6d4)"><i class="fas fa-copy"></i> COPY TO CLIPBOARD</button>
+      <button class="btn-cyber" onclick="copyExport()" style="width:100%;margin-top:8px;background:linear-gradient(135deg,#22C55E,#06B6D4)"><i class="fas fa-copy"></i> COPY</button>
     </div>
   </div>
 
-  <!-- Endpoints Panel -->
-  <div class="panel" id="panel-endpoints">
-    <div class="card">
-      <div class="card-header"><i class="fas fa-list"></i> All Endpoints (${Object.keys(endpoints).length})</div>
-      <div class="table-container">
-        <table><thead><tr><th>Icon</th><th>Endpoint</th><th>Description</th><th>Example</th><th>Full URL</th></tr></thead>
-        <tbody>${epHTML}</tbody></table>
-      </div>
-    </div>
-  </div>
-
-  <!-- Scopes Panel -->
   <div class="panel" id="panel-scopes">
-    <div class="card">
-      <div class="card-header"><i class="fas fa-crosshairs"></i> Update Key Scopes</div>
+    <div class="card"><div class="card-header"><i class="fas fa-crosshairs"></i> Update Key Scopes</div>
       <div class="form-grid">
         <div class="form-group" style="grid-column:1/-1"><label>Key Name</label><input id="sk" placeholder="Enter key name"></div>
-        <div style="grid-column:1/-1" class="form-group">
-          <label>Select Scopes</label>
+        <div style="grid-column:1/-1" class="form-group"><label>Select Scopes</label>
           <div class="scope-box">
             <label><input type="checkbox" value="*" id="scope-all2"> 🌟 ALL</label>
             ${Object.keys(endpoints).map(e=>`<label><input type="checkbox" value="${e}" class="scope-cb2"> ${endpoints[e].i} ${e}</label>`).join('')}
-            <label><input type="checkbox" value="custom" class="scope-cb2"> 🔧 Custom APIs</label>
+            <label><input type="checkbox" value="custom" class="scope-cb2"> 🔧 Custom</label>
           </div>
         </div>
-        <div style="grid-column:1/-1">
-          <button class="btn-cyber" onclick="updateScopes()" style="width:100%"><i class="fas fa-save"></i> UPDATE SCOPES</button>
-        </div>
+        <div style="grid-column:1/-1"><button class="btn-cyber" onclick="updateScopes()" style="width:100%"><i class="fas fa-save"></i> UPDATE SCOPES</button></div>
       </div>
     </div>
   </div>
 
-  <!-- Push Panel -->
   <div class="panel" id="panel-push">
-    <div class="card">
-      <div class="card-header"><i class="fas fa-arrow-up"></i> Push Key Expiry</div>
+    <div class="card"><div class="card-header"><i class="fas fa-arrow-up"></i> Push Key Expiry</div>
       <div class="form-grid">
         <div class="form-group"><label>Key Name</label><input id="pk" placeholder="Enter key name"></div>
-        <div class="form-group"><label>Days to Push</label><input id="pd" type="number" value="30"></div>
-        <div style="grid-column:1/-1">
-          <button class="btn-cyber" onclick="pushKeyAction()" style="width:100%"><i class="fas fa-arrow-up"></i> PUSH KEY</button>
-        </div>
+        <div class="form-group"><label>Days</label><input id="pd" type="number" value="30"></div>
+        <div style="grid-column:1/-1"><button class="btn-cyber" onclick="pushKeyAction()" style="width:100%"><i class="fas fa-arrow-up"></i> PUSH KEY</button></div>
       </div>
     </div>
   </div>
 
-  <!-- Protect Panel -->
   <div class="panel" id="panel-protect">
-    <div class="card">
-      <div class="card-header"><i class="fas fa-shield-alt"></i> Data Protection</div>
+    <div class="card"><div class="card-header"><i class="fas fa-shield-alt"></i> Data Protection</div>
       <div class="form-grid">
-        <div class="form-group"><label>Value to Protect</label><input id="protVal" placeholder="e.g., 9876543210"></div>
-        <div style="grid-column:1/-1">
-          <button class="btn-cyber" onclick="addProtection()" style="width:100%"><i class="fas fa-lock"></i> ADD PROTECTION</button>
-        </div>
+        <div class="form-group"><label>Value</label><input id="protVal" placeholder="e.g., 9876543210"></div>
+        <div style="grid-column:1/-1"><button class="btn-cyber" onclick="addProtection()" style="width:100%"><i class="fas fa-lock"></i> ADD PROTECTION</button></div>
       </div>
-      <br>
-      <div class="table-container" style="max-height:300px">
-        <table><thead><tr><th>Value</th><th>Status</th><th>Action</th></tr></thead>
-        <tbody>${protHTML}</tbody></table>
-      </div>
+      <br><div class="table-container" style="max-height:300px"><table><thead><tr><th>Value</th><th>Status</th><th>Action</th></tr></thead><tbody>${protHTML}</tbody></table></div>
     </div>
   </div>
 
-  <!-- Custom APIs Panel -->
   <div class="panel" id="panel-apis">
-    <div class="card">
-      <div class="card-header"><i class="fas fa-plug"></i> Custom APIs (${customAPIs.length})</div>
-      <div class="table-container" style="max-height:350px">
-        <table><thead><tr><th>ID</th><th>Name</th><th>Endpoint</th><th>Param</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody>${apiHTML}</tbody></table>
-      </div>
+    <div class="card"><div class="card-header"><i class="fas fa-plug"></i> Custom APIs (${customAPIs.length})</div>
+      <div class="table-container" style="max-height:350px"><table><thead><tr><th>ID</th><th>Name</th><th>Endpoint</th><th>Param</th><th>Status</th><th>Actions</th></tr></thead><tbody>${apiHTML}</tbody></table></div>
     </div>
   </div>
 
-  <!-- Add API Panel -->
   <div class="panel" id="panel-addapi">
-    <div class="card">
-      <div class="card-header"><i class="fas fa-puzzle-piece"></i> Add Custom API</div>
+    <div class="card"><div class="card-header"><i class="fas fa-puzzle-piece"></i> Add Custom API</div>
       <div class="form-grid">
         <div class="form-group"><label>API Name</label><input id="aname" placeholder="My API"></div>
-        <div class="form-group"><label>Endpoint Slug</label><input id="aep" placeholder="my-api"></div>
-        <div class="form-group"><label>Param Name</label><input id="aparam" value="num"></div>
-        <div class="form-group"><label>Example Value</label><input id="aex" placeholder="9876543210"></div>
-        <div style="grid-column:1/-1" class="form-group"><label>Real API URL (use {param})</label><input id="aurl" placeholder="https://api.com?param={param}"></div>
-        <div style="grid-column:1/-1">
-          <button class="btn-cyber" onclick="addAPI()" style="width:100%"><i class="fas fa-plus"></i> ADD API</button>
-        </div>
+        <div class="form-group"><label>Endpoint</label><input id="aep" placeholder="my-api"></div>
+        <div class="form-group"><label>Param</label><input id="aparam" value="num"></div>
+        <div class="form-group"><label>Example</label><input id="aex" placeholder="9876543210"></div>
+        <div style="grid-column:1/-1" class="form-group"><label>Real URL ({param})</label><input id="aurl" placeholder="https://api.com?param={param}"></div>
+        <div style="grid-column:1/-1"><button class="btn-cyber" onclick="addAPI()" style="width:100%"><i class="fas fa-plus"></i> ADD API</button></div>
       </div>
     </div>
   </div>
 
-  <!-- Monitor Panel -->
   <div class="panel" id="panel-monitor">
-    <div class="card">
-      <div class="card-header"><i class="fas fa-desktop"></i> Live Key Monitor <span style="font-size:10px;color:var(--accent-success)">● LIVE</span></div>
-      <div class="live-logs" id="monitorLogs">
-        <div style="color:var(--text-muted);text-align:center">Loading monitor logs...</div>
-      </div>
+    <div class="card"><div class="card-header"><i class="fas fa-desktop"></i> Live Key Monitor <span style="font-size:10px;color:#22C55E">● LIVE</span></div>
+      <div class="live-logs" id="monitorLogs"><div style="color:var(--text-muted);text-align:center">Loading...</div></div>
     </div>
   </div>
 
-  <!-- Admin Logs Panel -->
   <div class="panel" id="panel-adminlogs">
-    <div class="card">
-      <div class="card-header"><i class="fas fa-history"></i> Admin Login Logs</div>
-      <div class="table-container" style="max-height:400px">
-        <table><thead><tr><th>Time</th><th>User</th><th>Action</th><th>IP</th><th>Browser</th><th>Status</th></tr></thead>
-        <tbody id="adminLogsBody"><tr><td colspan="6" style="text-align:center;color:var(--text-muted)">Loading...</td></tr></tbody></table>
-      </div>
+    <div class="card"><div class="card-header"><i class="fas fa-history"></i> Admin Login Logs</div>
+      <div class="table-container" style="max-height:400px"><table><thead><tr><th>Time</th><th>User</th><th>Action</th><th>IP</th><th>Browser</th><th>Status</th></tr></thead>
+        <tbody id="adminLogsBody"><tr><td colspan="6" style="text-align:center;color:var(--text-muted)">Loading...</td></tr></tbody></table></div>
     </div>
   </div>
 
-  <!-- Settings Panel -->
   <div class="panel" id="panel-settings">
-    <div class="card">
-      <div class="card-header"><i class="fas fa-cog"></i> System Settings</div>
+    <div class="card"><div class="card-header"><i class="fas fa-cog"></i> System Settings</div>
       <button class="btn-cyber" onclick="resetAll()" style="width:100%;margin-bottom:12px"><i class="fas fa-sync-alt"></i> RESET ALL USAGE</button>
-      <button class="btn-cyber" onclick="clearLogs()" style="width:100%;background:linear-gradient(135deg,#f59e0b,#ef4444)"><i class="fas fa-trash"></i> CLEAR ALL LOGS</button>
+      <button class="btn-cyber" onclick="clearLogs()" style="width:100%;background:linear-gradient(135deg,#F59E0B,#EF4444)"><i class="fas fa-trash"></i> CLEAR ALL LOGS</button>
     </div>
   </div>
 </div>
 
 <script>
-const TOKEN = '${stoken}';
-const endpointsData = ${JSON.stringify(endpoints)};
-
-// ========== PARTICLE SYSTEM ==========
-const particleCanvas = document.getElementById('particles-canvas');
-const pctx = particleCanvas.getContext('2d');
-particleCanvas.width = window.innerWidth;
-particleCanvas.height = window.innerHeight;
-const particles = [];
-for(let i=0;i<80;i++){particles.push({x:Math.random()*particleCanvas.width,y:Math.random()*particleCanvas.height,size:Math.random()*2+0.5,speedX:(Math.random()-0.5)*0.5,speedY:(Math.random()-0.5)*0.5,opacity:Math.random()*0.6+0.1})}
-function animateParticles(){pctx.clearRect(0,0,particleCanvas.width,particleCanvas.height);particles.forEach(p=>{p.x+=p.speedX;p.y+=p.speedY;if(p.x<0)p.x=particleCanvas.width;if(p.x>particleCanvas.width)p.x=0;if(p.y<0)p.y=particleCanvas.height;if(p.y>particleCanvas.height)p.y=0;pctx.beginPath();pctx.arc(p.x,p.y,p.size,0,Math.PI*2);pctx.fillStyle='rgba(99,102,241,'+p.opacity+')';pctx.fill()});particles.forEach((p,i)=>{particles.slice(i+1).forEach(p2=>{const dist=Math.hypot(p.x-p2.x,p.y-p2.y);if(dist<120){pctx.beginPath();pctx.moveTo(p.x,p.y);pctx.lineTo(p2.x,p2.y);pctx.strokeStyle='rgba(99,102,241,'+(0.05*(1-dist/120))+')';pctx.lineWidth=0.5;pctx.stroke()}})});requestAnimationFrame(animateParticles)}animateParticles();
-
-// ========== SNOWFALL ==========
-const snowCanvas = document.getElementById('snowfall-canvas');
-const sctx = snowCanvas.getContext('2d');
-snowCanvas.width = window.innerWidth;
-snowCanvas.height = window.innerHeight;
-const snowflakes = [];
-for(let i=0;i<60;i++){snowflakes.push({x:Math.random()*snowCanvas.width,y:Math.random()*snowCanvas.height,size:Math.random()*3+1,speed:Math.random()*1+0.3,wind:Math.random()*0.5-0.25,opacity:Math.random()*0.5+0.1})}
-function animateSnow(){sctx.clearRect(0,0,snowCanvas.width,snowCanvas.height);snowflakes.forEach(s=>{s.y+=s.speed;s.x+=s.wind;if(s.y>snowCanvas.height){s.y=-5;s.x=Math.random()*snowCanvas.width}if(s.x<0)s.x=snowCanvas.width;if(s.x>snowCanvas.width)s.x=0;sctx.beginPath();sctx.arc(s.x,s.y,s.size,0,Math.PI*2);sctx.fillStyle='rgba(200,210,255,'+s.opacity+')';sctx.fill()});requestAnimationFrame(animateSnow)}animateSnow();
-
-// Update live time
+const TOKEN='${stoken}';
+const pc=document.getElementById('particles-canvas'),pctx=pc.getContext('2d');pc.width=window.innerWidth;pc.height=window.innerHeight;
+const parts=[];for(let i=0;i<80;i++)parts.push({x:Math.random()*pc.width,y:Math.random()*pc.height,s:Math.random()*2+.5,vx:(Math.random()-.5)*.5,vy:(Math.random()-.5)*.5,o:Math.random()*.6+.1});
+function ap(){pctx.clearRect(0,0,pc.width,pc.height);parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=pc.width;if(p.x>pc.width)p.x=0;if(p.y<0)p.y=pc.height;if(p.y>pc.height)p.y=0;pctx.beginPath();pctx.arc(p.x,p.y,p.s,0,Math.PI*2);pctx.fillStyle='rgba(124,58,237,'+p.o+')';pctx.fill()});parts.forEach((p,i)=>{parts.slice(i+1).forEach(p2=>{const d=Math.hypot(p.x-p2.x,p.y-p2.y);if(d<120){pctx.beginPath();pctx.moveTo(p.x,p.y);pctx.lineTo(p2.x,p2.y);pctx.strokeStyle='rgba(124,58,237,'+(0.05*(1-d/120))+')';pctx.lineWidth=0.5;pctx.stroke()}})});requestAnimationFrame(ap)}ap();
+const sc=document.getElementById('snowfall-canvas'),sctx=sc.getContext('2d');sc.width=window.innerWidth;sc.height=window.innerHeight;
+const snow=[];for(let i=0;i<60;i++)snow.push({x:Math.random()*sc.width,y:Math.random()*sc.height,s:Math.random()*3+1,sp:Math.random()*1+.3,w:Math.random()*.5-.25,o:Math.random()*.5+.1});
+function as(){sctx.clearRect(0,0,sc.width,sc.height);snow.forEach(s=>{s.y+=s.sp;s.x+=s.w;if(s.y>sc.height){s.y=-5;s.x=Math.random()*sc.width}if(s.x<0)s.x=sc.width;if(s.x>sc.width)s.x=0;sctx.beginPath();sctx.arc(s.x,s.y,s.s,0,Math.PI*2);sctx.fillStyle='rgba(200,210,255,'+s.o+')';sctx.fill()});requestAnimationFrame(as)}as();
 setInterval(()=>{document.getElementById('liveTime').textContent=new Date().toISOString().replace('T',' ').substring(0,19)},1000);
 
-// ========== TAB SWITCHING ==========
 function switchTab(tabName){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
@@ -1971,268 +1359,111 @@ function switchTab(tabName){
   if(tabName==='monitor')loadMonitorLogs();
   if(tabName==='adminlogs')loadAdminLogs();
 }
-
-// ========== TOAST ==========
 function showToast(msg,type='success'){
-  const toast=document.createElement('div');
-  toast.className='toast '+type;
-  toast.innerHTML=msg;
-  document.body.appendChild(toast);
-  setTimeout(()=>toast.remove(),3000);
+  const toast=document.createElement('div');toast.className='toast '+type;toast.innerHTML=msg;
+  document.body.appendChild(toast);setTimeout(()=>toast.remove(),3000);
 }
-
-// ========== API CALLS ==========
 async function apiCall(url,data=null){
   const options={method:data?'POST':'GET',headers:{'Content-Type':'application/json','x-admin-token':TOKEN}};
   if(data)options.body=JSON.stringify(data);
-  const res=await fetch(url,options);
-  return await res.json();
+  const res=await fetch(url,options);return await res.json();
 }
-
-// ========== KEY GENERATION ==========
 async function generateKey(){
-  const keyName=document.getElementById('gk').value.trim();
-  const keyOwner=document.getElementById('go').value.trim();
-  if(!keyName||!keyOwner){showToast('⚠ Please fill Key ID and Owner Name','error');return}
-  let scopes=[];
-  if(document.getElementById('scope-all').checked)scopes=['*'];
+  const keyName=document.getElementById('gk').value.trim(),keyOwner=document.getElementById('go').value.trim();
+  if(!keyName||!keyOwner){showToast('⚠ Fill Key ID and Owner Name','error');return}
+  let scopes=[];if(document.getElementById('scope-all').checked)scopes=['*'];
   else document.querySelectorAll('.scope-cb:checked').forEach(c=>scopes.push(c.value));
-  const data={
-    keyName,keyOwner,scopes,
-    limit:document.getElementById('gl').value,
-    dailyLimit:parseInt(document.getElementById('gdl').value)||0,
-    perSecondLimit:parseInt(document.getElementById('gpsl').value)||0,
-    days:parseInt(document.getElementById('gd').value)||30,
-    cooldown:parseInt(document.getElementById('gc').value)||0
-  };
+  const data={keyName,keyOwner,scopes,limit:document.getElementById('gl').value,dailyLimit:parseInt(document.getElementById('gdl').value)||0,perSecondLimit:parseInt(document.getElementById('gpsl').value)||0,days:parseInt(document.getElementById('gd').value)||30,cooldown:parseInt(document.getElementById('gc').value)||0};
   const res=await apiCall('/admin/generate-key',data);
-  if(res.success){showToast('✅ Key Generated: '+keyName);setTimeout(()=>location.reload(),1500)}
-  else showToast('❌ '+(res.e||'Error'),'error');
+  res.success?(showToast('✅ Key Generated: '+keyName),setTimeout(()=>location.reload(),1500)):showToast('❌ '+(res.e||'Error'),'error');
 }
-
-// ========== KEY ACTIONS ==========
-async function resetKey(k){if(confirm('Reset usage for '+k+'?')){await apiCall('/admin/reset-key-usage',{keyName:k});location.reload()}}
-async function deleteKey(k){if(confirm('DELETE '+k+'?')){await apiCall('/admin/delete-key',{keyName:k});location.reload()}}
-async function stopKey(k){if(!confirm('⛔ Stop/Activate: '+k+'?'))return;const res=await apiCall('/admin/stop-key',{keyName:k});res.success?location.reload():showToast('❌ Error','error')}
-async function pushKey(k){const d=prompt('Days to push?','30');if(!d)return;const res=await apiCall('/admin/push-key',{keyName:k,days:parseInt(d)});res.success?(showToast('✅ '+res.message),setTimeout(()=>location.reload(),1000)):showToast('❌ Error','error')}
-async function pushKeyAction(){const k=document.getElementById('pk').value.trim();const d=parseInt(document.getElementById('pd').value)||30;if(!k){showToast('⚠ Enter key name','error');return}const res=await apiCall('/admin/push-key',{keyName:k,days:d});res.success?(showToast('✅ '+res.message),setTimeout(()=>location.reload(),1000)):showToast('❌ Error','error')}
-
-// ========== SCOPES ==========
-async function updateScopes(){
-  const k=document.getElementById('sk').value.trim();
-  if(!k){showToast('⚠ Enter key name','error');return}
-  let scopes=[];
-  if(document.getElementById('scope-all2').checked)scopes=['*'];
-  else document.querySelectorAll('.scope-cb2:checked').forEach(c=>scopes.push(c.value));
-  const res=await apiCall('/admin/update-scopes',{keyName:k,scopes});
-  res.success?(showToast('✅ Scopes updated'),setTimeout(()=>location.reload(),1000)):showToast('❌ Error','error');
-}
-
-// ========== PROTECTION ==========
+async function resetKey(k){if(confirm('Reset usage?')){await apiCall('/admin/reset-key-usage',{keyName:k});location.reload()}}
+async function deleteKey(k){if(confirm('DELETE?')){await apiCall('/admin/delete-key',{keyName:k});location.reload()}}
+async function stopKey(k){if(!confirm('Stop/Activate?'))return;const res=await apiCall('/admin/stop-key',{keyName:k});res.success?location.reload():showToast('❌ Error','error')}
+async function pushKey(k){const d=prompt('Days?','30');if(!d)return;const res=await apiCall('/admin/push-key',{keyName:k,days:parseInt(d)});res.success?(showToast('✅ '+res.message),setTimeout(()=>location.reload(),1000)):showToast('❌ Error','error')}
+async function pushKeyAction(){const k=document.getElementById('pk').value.trim(),d=parseInt(document.getElementById('pd').value)||30;if(!k){showToast('⚠ Enter key name','error');return}const res=await apiCall('/admin/push-key',{keyName:k,days:d});res.success?(showToast('✅ '+res.message),setTimeout(()=>location.reload(),1000)):showToast('❌ Error','error')}
+async function updateScopes(){const k=document.getElementById('sk').value.trim();if(!k){showToast('⚠ Enter key name','error');return}let scopes=[];if(document.getElementById('scope-all2').checked)scopes=['*'];else document.querySelectorAll('.scope-cb2:checked').forEach(c=>scopes.push(c.value));const res=await apiCall('/admin/update-scopes',{keyName:k,scopes});res.success?(showToast('✅ Updated'),setTimeout(()=>location.reload(),1000)):showToast('❌ Error','error')}
 async function addProtection(){const v=document.getElementById('protVal').value.trim();if(!v)return;const res=await apiCall('/admin/add-protection',{value:v});res.success?(showToast(res.message),setTimeout(()=>location.reload(),1000)):showToast('❌ Error','error')}
-async function removeProt(v){if(!confirm('Remove protection?'))return;await apiCall('/admin/remove-protection',{value:v});location.reload()}
-
-// ========== CUSTOM APIs ==========
-async function addAPI(){
-  const n=document.getElementById('aname').value.trim(),e=document.getElementById('aep').value.trim();
-  if(!n||!e){showToast('⚠ Fill name & endpoint','error');return}
-  const res=await apiCall('/admin/add-api',{name:n,endpoint:e,param:document.getElementById('aparam').value,example:document.getElementById('aex').value,realAPI:document.getElementById('aurl').value,visible:true});
-  res.success?(showToast('✅ API Added!'),setTimeout(()=>location.reload(),1000)):showToast('❌ Error','error');
-}
+async function removeProt(v){if(!confirm('Remove?'))return;await apiCall('/admin/remove-protection',{value:v});location.reload()}
+async function addAPI(){const n=document.getElementById('aname').value.trim(),e=document.getElementById('aep').value.trim();if(!n||!e){showToast('⚠ Fill name & endpoint','error');return}const res=await apiCall('/admin/add-api',{name:n,endpoint:e,param:document.getElementById('aparam').value,example:document.getElementById('aex').value,realAPI:document.getElementById('aurl').value,visible:true});res.success?(showToast('✅ Added!'),setTimeout(()=>location.reload(),1000)):showToast('❌ Error','error')}
 async function toggleAPI(id){await apiCall('/admin/toggle-api',{id});location.reload()}
-async function deleteAPI(id){if(confirm('Delete API?')){await apiCall('/admin/delete-api',{id});location.reload()}}
-
-// ========== SETTINGS ==========
-async function resetAll(){if(confirm('Reset ALL usage?')){await apiCall('/admin/reset-all');showToast('✅ All usage reset');setTimeout(()=>location.reload(),1000)}}
-async function clearLogs(){if(confirm('Clear ALL logs?')){await apiCall('/admin/clear-logs');showToast('✅ Logs cleared');setTimeout(()=>location.reload(),1000)}}
-
-// ========== IMPORT / EXPORT ==========
-async function importKeys(){
-  const d=document.getElementById('importData').value.trim();
-  const msg=document.getElementById('importMsg');
-  if(!d){msg.style.color='#ef4444';msg.textContent='❌ Paste JSON data first!';return}
-  try{
-    let jsonData=JSON.parse(d);
-    const res=await apiCall('/admin/import-keys',jsonData);
-    if(res.success){msg.style.color='#10b981';msg.textContent='✅ '+res.message;setTimeout(()=>location.reload(),1500)}
-    else{msg.style.color='#ef4444';msg.textContent='❌ '+(res.e||'Error')}
-  }catch(e){msg.style.color='#ef4444';msg.textContent='❌ Invalid JSON format!'}
-}
-
+async function deleteAPI(id){if(confirm('Delete?')){await apiCall('/admin/delete-api',{id});location.reload()}}
+async function resetAll(){if(confirm('Reset ALL?')){await apiCall('/admin/reset-all');showToast('✅ Reset');setTimeout(()=>location.reload(),1000)}}
+async function clearLogs(){if(confirm('Clear ALL?')){await apiCall('/admin/clear-logs');showToast('✅ Cleared');setTimeout(()=>location.reload(),1000)}}
+async function importKeys(){const d=document.getElementById('importData').value.trim(),msg=document.getElementById('importMsg');if(!d){msg.style.color='#EF4444';msg.textContent='❌ Paste JSON first!';return}try{let jsonData=JSON.parse(d);const res=await apiCall('/admin/import-keys',jsonData);if(res.success){msg.style.color='#22C55E';msg.textContent='✅ '+res.message;setTimeout(()=>location.reload(),1500)}else{msg.style.color='#EF4444';msg.textContent='❌ '+(res.e||'Error')}}catch(e){msg.style.color='#EF4444';msg.textContent='❌ Invalid JSON!'}}
 let exportData='';
-async function loadExport(){
-  const res=await apiCall('/admin/export-keys');
-  if(res.success){exportData=JSON.stringify(res,null,2);document.getElementById('exportData').value=exportData;showToast('✅ Export data loaded')}
-  else showToast('❌ Error','error');
-}
-async function copyExport(){
-  const ta=document.getElementById('exportData');
-  if(!ta.value){showToast('⚠ Click LOAD first!','error');return}
-  try{await navigator.clipboard.writeText(ta.value);showToast('✅ Copied!')}
-  catch(e){ta.select();document.execCommand('copy');showToast('✅ Copied!')}
-}
-
-// ========== DASHBOARD STATS ==========
+async function loadExport(){const res=await apiCall('/admin/export-keys');if(res.success){exportData=JSON.stringify(res,null,2);document.getElementById('exportData').value=exportData;showToast('✅ Loaded')}else showToast('❌ Error','error')}
+async function copyExport(){const ta=document.getElementById('exportData');if(!ta.value){showToast('⚠ Click LOAD first!','error');return}try{await navigator.clipboard.writeText(ta.value);showToast('✅ Copied!')}catch(e){ta.select();document.execCommand('copy');showToast('✅ Copied!')}}
 async function loadDashboardStats(){
-  try{
-    const res=await apiCall('/admin/stats');
-    if(res){
-      document.getElementById('dashToday').textContent=res.todayRequests||0;
-      document.getElementById('dashWeek').textContent=res.weeklyRequests||0;
-      document.getElementById('dashMonth').textContent=res.monthlyRequests||0;
-      document.getElementById('dashTotal').textContent=res.totalRequests||0;
-      document.getElementById('statToday').textContent=res.todayRequests||0;
-      document.getElementById('statTotal').textContent=res.totalRequests||0;
-      if(res.topKeys){
-        const tbody=document.getElementById('topKeysBody');
-        tbody.innerHTML=res.topKeys.map(k=>'<tr><td style="color:#818cf8">'+k.key+'</td><td>'+k.requests+'</td><td style="color:#f59e0b">-</td><td style="color:#10b981">-</td></tr>').join('')||'<tr><td colspan="4" style="text-align:center;color:var(--text-muted)">No data</td></tr>';
-      }
-    }
-  }catch(e){}
+  try{const res=await apiCall('/admin/stats');if(res){document.getElementById('dashToday').textContent=res.todayRequests||0;document.getElementById('dashWeek').textContent=res.weeklyRequests||0;document.getElementById('dashMonth').textContent=res.monthlyRequests||0;document.getElementById('dashTotal').textContent=res.totalRequests||0;document.getElementById('statToday').textContent=res.todayRequests||0;document.getElementById('statTotal').textContent=res.totalRequests||0;if(res.topKeys){const tbody=document.getElementById('topKeysBody');tbody.innerHTML=res.topKeys.map(k=>'<tr><td style="color:#A78BFA">'+k.key+'</td><td>'+k.requests+'</td><td style="color:#F59E0B">-</td><td style="color:#22C55E">-</td></tr>').join('')||'<tr><td colspan="4">No data</td></tr>'}}}catch(e){}
 }
-
-// ========== MONITOR LOGS ==========
 async function loadMonitorLogs(){
-  try{
-    const res=await apiCall('/admin/monitor-logs');
-    const container=document.getElementById('monitorLogs');
-    if(res&&res.logs){
-      container.innerHTML=res.logs.reverse().map(l=>{
-        return '<div class="log-entry"><span class="log-time">'+l.timestamp+'</span><span class="log-key">'+l.key+'</span><span class="log-endpoint">/'+l.endpoint+'</span><span class="log-ip">'+l.ip+'</span><span class="log-browser">'+l.browser+'</span></div>';
-      }).join('')||'<div style="color:var(--text-muted)">No monitor logs yet</div>';
-    }
-  }catch(e){}
+  try{const res=await apiCall('/admin/monitor-logs');const c=document.getElementById('monitorLogs');if(res&&res.logs){c.innerHTML=res.logs.reverse().map(l=>'<div class="log-entry"><span class="log-time">'+l.timestamp+'</span><span class="log-key">'+l.key+'</span><span class="log-endpoint">/'+l.endpoint+'</span><span class="log-ip">'+l.ip+'</span><span class="log-browser">'+l.browser+'</span></div>').join('')||'<div style="color:var(--text-muted)">No logs</div>'}}catch(e){}
 }
-
-// ========== ADMIN LOGS ==========
 async function loadAdminLogs(){
-  try{
-    const res=await apiCall('/admin/admin-logs');
-    const tbody=document.getElementById('adminLogsBody');
-    if(res&&res.logs){
-      tbody.innerHTML=res.logs.reverse().map(l=>{
-        const statusColor=l.status==='SUCCESS'?'#10b981':'#ef4444';
-        return '<tr><td>'+l.timestamp+'</td><td>'+l.user+'</td><td>'+l.action+'</td><td>'+l.ip+'</td><td style="font-size:9px">'+l.browser+'</td><td style="color:'+statusColor+'">'+l.status+'</td></tr>';
-      }).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--text-muted)">No admin logs yet</td></tr>';
-    }
-  }catch(e){}
+  try{const res=await apiCall('/admin/admin-logs');const tbody=document.getElementById('adminLogsBody');if(res&&res.logs){tbody.innerHTML=res.logs.reverse().map(l=>{const sc=l.status==='SUCCESS'?'#22C55E':'#EF4444';return '<tr><td>'+l.timestamp+'</td><td>'+l.user+'</td><td>'+l.action+'</td><td>'+l.ip+'</td><td style="font-size:9px">'+l.browser+'</td><td style="color:'+sc+'">'+l.status+'</td></tr>'}).join('')||'<tr><td colspan="6">No logs</td></tr>'}}catch(e){}
 }
-
-// ========== COPY ENDPOINT ==========
 function copyEndpoint(ep,param,example){
   const url=location.origin+'/api/key-bronx/'+ep+'?key=YOUR_KEY&'+param+'='+example;
-  navigator.clipboard.writeText(url).then(()=>showToast('✅ Copied: '+url)).catch(()=>showToast('⚠ Copy failed','error'));
+  navigator.clipboard.writeText(url).then(()=>showToast('✅ Copied!')).catch(()=>showToast('⚠ Copy failed','error'));
 }
-
-// Load dashboard on start
 loadDashboardStats();
 </script></body></html>`;
-    }catch(e){return `<html><body style="background:#0a0a1a;color:#ef4444;padding:30px"><h1>ERROR</h1><p>${e.message}</p></body></html>`}
+    }catch(e){return `<html><body style="background:#090B12;color:#EF4444;padding:30px"><h1>ERROR</h1><p>${e.message}</p></body></html>`}
 }
 
 // ============================================
-// V200 ULTRA CYBERPUNK DOCS PAGE
+// DOCS PAGE
 // ============================================
 function renderDocs(){
-    const cards=Object.entries(endpoints).map(([n,e])=>`
-        <div class="doc-card">
-            <span class="doc-method">GET</span>
-            <b>/${n}</b>
-            <p>${e.d}</p>
-            <code>GET /api/key-bronx/${n}?key=YOUR_KEY&${e.p}=${e.e}</code>
-        </div>
-    `).join('');
+    const cards=Object.entries(endpoints).map(([n,e])=>`<div class="card"><span style="background:rgba(124,58,237,0.15);color:#A78BFA;padding:3px 10px;border-radius:6px;font-size:10px;font-weight:700">GET</span><b style="color:#fff;font-size:16px;margin-left:8px">/${n}</b><p style="color:var(--text-muted);font-size:11px;margin:8px 0">${e.d}</p><code style="display:block;background:rgba(5,5,15,0.8);color:#A78BFA;padding:10px;border-radius:8px;font-size:10px;font-family:'Space Grotesk',monospace">GET /api/key-bronx/${n}?key=YOUR_KEY&${e.p}=${e.e}</code></div>`).join('');
     return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>BRONX V200 | API DOCS</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<style>
-:root{--bg:#0a0a1a;--card-bg:rgba(15,15,40,0.5);--border:rgba(99,102,241,0.1);--text:#e2e8f0;--muted:#64748b;--accent:#6366f1}
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh}
-body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% -10%,rgba(99,102,241,0.06),transparent 50%);pointer-events:none;z-index:0}
-nav{position:sticky;top:0;z-index:100;background:rgba(10,10,26,0.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;justify-content:space-between;align-items:center}
-nav .brand{font-family:'Orbitron',sans-serif;font-size:14px;font-weight:900;letter-spacing:6px;background:linear-gradient(90deg,#6366f1,#8b5cf6,#a855f7,#ec4899);background-size:300% 300%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:rainbow 3s linear infinite}
-@keyframes rainbow{0%{background-position:0% 50%}100%{background-position:300% 50%}}
-nav a{color:var(--muted);text-decoration:none;font-size:11px;font-weight:600;padding:8px 16px;border-radius:10px;transition:.3s}nav a:hover{color:var(--accent);background:rgba(99,102,241,0.05)}
-.container{max-width:1200px;margin:0 auto;padding:30px 20px;position:relative;z-index:10}
-.hero{text-align:center;padding:40px 20px}.hero h1{font-family:'Orbitron',sans-serif;font-size:clamp(28px,6vw,48px);background:linear-gradient(90deg,#6366f1,#8b5cf6,#a855f7,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent}.hero p{color:var(--muted);margin-top:8px;font-size:13px;letter-spacing:2px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
-.doc-card{background:var(--card-bg);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:18px;padding:20px;transition:.3s;border-top:2px solid var(--accent)}
-.doc-card:hover{transform:translateY(-4px);box-shadow:0 20px 50px rgba(0,0,0,0.5)}
-.doc-method{background:rgba(99,102,241,0.15);color:#818cf8;padding:3px 10px;border-radius:6px;font-size:10px;font-weight:700}
-.doc-card b{color:#fff;font-size:16px;margin-left:8px}
-.doc-card p{color:var(--muted);font-size:11px;margin:8px 0}
-.doc-card code{display:block;background:rgba(5,5,20,0.8);color:#a78bfa;padding:10px;border-radius:8px;font-size:10px;font-family:'Space Grotesk',monospace;word-break:break-all}
-</style></head><body>
-<nav><a href="/" class="brand">🛡️ BRONX V200</a><div><a href="/"><i class="fas fa-home"></i> Home</a><a href="/admin"><i class="fas fa-cog"></i> Admin</a></div></nav>
-<div class="container"><div class="hero"><h1>📚 API Documentation</h1><p>BRONX OSINT V200 ULTRA</p></div><div class="grid">${cards}</div></div>
-</body></html>`;
+${CYBERPUNK_CSS}
+<style>nav .brand{animation:rainbowShift 3s linear infinite}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}</style></head><body>
+<div class="grid-bg"></div>
+<nav class="topnav"><a href="/" class="brand">🛡️ BRONX V200</a><div class="nav-links"><a href="/">Home</a><a href="/admin">Admin</a></div></nav>
+<div class="container"><div style="text-align:center;padding:40px 20px"><h1 style="font-family:'Orbitron',sans-serif;font-size:clamp(28px,6vw,48px);background:var(--gradient-rainbow);-webkit-background-clip:text;-webkit-text-fill-color:transparent">📚 API Documentation</h1><p style="color:var(--text-muted);margin-top:8px">BRONX OSINT V200 ULTRA</p></div><div class="grid">${cards}</div></div></body></html>`;
 }
 
 // ============================================
-// V200 ULTRA CYBERPUNK HOME PAGE
+// HOME PAGE
 // ============================================
 function renderHome(){
     const vapi=customAPIs.filter(a=>a.visible);
     let cards='';
     Object.entries(endpoints).forEach(([n,e])=>{
-        cards+=`<div class="ep-card" onclick="copyEndpoint('${esc(n)}','${esc(e.p)}','${esc(e.e)}')">
-            <span class="ep-icon">${e.i}</span>
-            <b>/${esc(n)}</b>
-            <small>${e.d}</small>
-            <code>${e.p}=${e.e}</code>
+        cards+=`<div class="card" onclick="copyEndpoint('${esc(n)}','${esc(e.p)}','${esc(e.e)}')" style="cursor:pointer;border-top:2px solid var(--accent-primary);padding:18px">
+            <span style="font-size:22px">${e.i}</span><b style="color:#fff;font-size:14px;display:block;margin:6px 0">/${esc(n)}</b>
+            <small style="color:var(--text-muted);font-size:9px;display:block;margin-bottom:8px">${e.d}</small>
+            <code style="font-size:8px;color:#A78BFA;background:rgba(5,5,15,0.6);padding:4px 8px;border-radius:6px">${e.p}=${e.e}</code>
         </div>`;
     });
     vapi.forEach(a=>{
-        cards+=`<div class="ep-card custom-ep" onclick="copyCustomEp('${esc(a.endpoint)}','${esc(a.param)}','${esc(a.example)}')">
-            <span class="ep-icon">🔧</span>
-            <b>/${esc(a.endpoint)}</b>
-            <small>Custom API</small>
-            <code>${a.param}=${a.example||'v'}</code>
+        cards+=`<div class="card" onclick="copyCustomEp('${esc(a.endpoint)}','${esc(a.param)}','${esc(a.example)}')" style="cursor:pointer;border-top:2px solid #8B5CF6;padding:18px">
+            <span style="font-size:22px">🔧</span><b style="color:#fff;font-size:14px;display:block;margin:6px 0">/${esc(a.endpoint)}</b>
+            <small style="color:var(--text-muted);font-size:9px;display:block;margin-bottom:8px">Custom API</small>
+            <code style="font-size:8px;color:#A78BFA;background:rgba(5,5,15,0.6);padding:4px 8px;border-radius:6px">${a.param}=${a.example||'v'}</code>
         </div>`;
     });
     return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>BRONX OSINT V200 ULTRA</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<style>
-:root{--bg:#0a0a1a;--card-bg:rgba(15,15,40,0.45);--border:rgba(99,102,241,0.08);--text:#e2e8f0;--muted:#64748b;--accent:#6366f1}
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;overflow-x:hidden}
-body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(99,102,241,0.05),transparent 60%),radial-gradient(ellipse at 80% 100%,rgba(139,92,246,0.03),transparent 50%);pointer-events:none;z-index:0}
-/* Particles */
-#particles-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
-/* Snowfall */
-#snowfall-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none}
-nav{position:sticky;top:0;z-index:1000;background:rgba(10,10,26,0.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;justify-content:space-between;align-items:center}
-nav .logo{font-family:'Orbitron',sans-serif;font-size:14px;font-weight:900;letter-spacing:6px;background:linear-gradient(90deg,#6366f1,#8b5cf6,#a855f7,#ec4899,#f43f5e);background-size:300% 300%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:rainbow 3s linear infinite}
-@keyframes rainbow{0%{background-position:0% 50%}100%{background-position:300% 50%}}
-nav a{color:var(--muted);text-decoration:none;font-size:11px;font-weight:600;padding:8px 16px;border-radius:10px;transition:.3s}nav a:hover{color:var(--accent);background:rgba(99,102,241,0.05)}
-.hero{text-align:center;padding:50px 20px 20px;position:relative;z-index:10}
-.hero h1{font-size:clamp(32px,8vw,60px);font-weight:900;background:linear-gradient(90deg,#6366f1,#8b5cf6,#a855f7,#ec4899,#f43f5e,#6366f1);background-size:400% 400%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-family:'Orbitron',sans-serif;animation:rainbow 4s linear infinite}
-.hero .sub{color:var(--muted);font-size:12px;letter-spacing:5px;margin-top:6px}
-.container{max-width:1200px;margin:0 auto;padding:0 20px 40px;position:relative;z-index:10}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
-.ep-card{background:var(--card-bg);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:16px;padding:18px;cursor:pointer;transition:.3s;border-top:2px solid var(--accent)}
-.ep-card:hover{transform:translateY(-4px);box-shadow:0 20px 50px rgba(0,0,0,0.5);border-color:rgba(99,102,241,0.3)}
-.custom-ep{border-top-color:#8b5cf6}
-.ep-icon{font-size:22px}.ep-card b{font-size:14px;color:#fff;display:block;margin:6px 0}.ep-card small{font-size:9px;color:var(--muted);display:block;margin-bottom:8px}.ep-card code{font-size:8px;color:#818cf8;background:rgba(5,5,20,0.6);padding:4px 8px;border-radius:6px;font-family:'Space Grotesk',monospace}
-footer{text-align:center;padding:24px;border-top:1px solid var(--border);position:relative;z-index:10}footer span{font-weight:900;background:linear-gradient(90deg,#6366f1,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-family:'Orbitron',sans-serif}
-</style></head><body>
-<canvas id="particles-canvas"></canvas>
-<canvas id="snowfall-canvas"></canvas>
-<nav><a href="/" class="logo">🛡️ BRONX V200</a><div><a href="/docs">📚 DOCS</a> <a href="/admin">🔐 ADMIN</a></div></nav>
-<header class="hero"><h1>BRONX OSINT V200</h1><p class="sub">CYBERPUNK EDITION · FAKE IP · SNOWFALL · LIVE MONITOR</p></header>
+${CYBERPUNK_CSS}
+<style>nav .logo{animation:rainbowShift 3s linear infinite}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}.hero h1{animation:rainbowShift 4s linear infinite;background-size:400% 400%}</style></head><body>
+<canvas id="particles-canvas"></canvas><canvas id="snowfall-canvas"></canvas>
+<nav class="topnav"><a href="/" class="brand" style="font-size:14px;font-weight:900;letter-spacing:6px;background:var(--gradient-rainbow);background-size:300% 300%;-webkit-background-clip:text;-webkit-text-fill-color:transparent">🛡️ BRONX V200</a><div class="nav-links"><a href="/docs">📚 DOCS</a> <a href="/admin">🔐 ADMIN</a></div></nav>
+<header style="text-align:center;padding:50px 20px 20px;position:relative;z-index:10"><h1 style="font-size:clamp(32px,8vw,60px);font-weight:900;background:var(--gradient-rainbow);background-size:400% 400%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-family:'Orbitron',sans-serif">BRONX OSINT V200</h1><p style="color:var(--text-muted);font-size:12px;letter-spacing:5px;margin-top:6px">CYBERPUNK EDITION · FAKE IP · SNOWFALL · LIVE MONITOR</p></header>
 <div class="container"><div class="grid">${cards}</div></div>
-<footer><span>BRONX OSINT V200 ULTRA 🛡️</span></footer>
+<footer style="text-align:center;padding:24px;border-top:1px solid var(--border-color);position:relative;z-index:10"><span style="font-weight:900;background:var(--gradient-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-family:'Orbitron',sans-serif">BRONX OSINT V200 ULTRA 🛡️</span></footer>
 <script>
 const eps=${JSON.stringify(endpoints)};
 function copyEndpoint(n,p,e){navigator.clipboard.writeText(location.origin+'/api/key-bronx/'+n+'?key=YOUR_KEY&'+p+'='+e)}
 function copyCustomEp(n,p,e){navigator.clipboard.writeText(location.origin+'/api/custom/'+n+'?key=YOUR_KEY&'+p+'='+(e||'v'))}
-// Particles
 const pc=document.getElementById('particles-canvas'),pctx=pc.getContext('2d');pc.width=window.innerWidth;pc.height=window.innerHeight;
 const parts=[];for(let i=0;i<80;i++)parts.push({x:Math.random()*pc.width,y:Math.random()*pc.height,s:Math.random()*2+.5,vx:(Math.random()-.5)*.5,vy:(Math.random()-.5)*.5,o:Math.random()*.6+.1});
-function ap(){pctx.clearRect(0,0,pc.width,pc.height);parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=pc.width;if(p.x>pc.width)p.x=0;if(p.y<0)p.y=pc.height;if(p.y>pc.height)p.y=0;pctx.beginPath();pctx.arc(p.x,p.y,p.s,0,Math.PI*2);pctx.fillStyle='rgba(99,102,241,'+p.o+')';pctx.fill()});requestAnimationFrame(ap)}ap();
-// Snowfall
+function ap(){pctx.clearRect(0,0,pc.width,pc.height);parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=pc.width;if(p.x>pc.width)p.x=0;if(p.y<0)p.y=pc.height;if(p.y>pc.height)p.y=0;pctx.beginPath();pctx.arc(p.x,p.y,p.s,0,Math.PI*2);pctx.fillStyle='rgba(124,58,237,'+p.o+')';pctx.fill()});requestAnimationFrame(ap)}ap();
 const sc=document.getElementById('snowfall-canvas'),sctx=sc.getContext('2d');sc.width=window.innerWidth;sc.height=window.innerHeight;
 const snow=[];for(let i=0;i<60;i++)snow.push({x:Math.random()*sc.width,y:Math.random()*sc.height,s:Math.random()*3+1,sp:Math.random()*1+.3,w:Math.random()*.5-.25,o:Math.random()*.5+.1});
 function as(){sctx.clearRect(0,0,sc.width,sc.height);snow.forEach(s=>{s.y+=s.sp;s.x+=s.w;if(s.y>sc.height){s.y=-5;s.x=Math.random()*sc.width}if(s.x<0)s.x=sc.width;if(s.x>sc.width)s.x=0;sctx.beginPath();sctx.arc(s.x,s.y,s.s,0,Math.PI*2);sctx.fillStyle='rgba(200,210,255,'+s.o+')';sctx.fill()});requestAnimationFrame(as)}as();
@@ -2242,9 +1473,7 @@ function as(){sctx.clearRect(0,0,sc.width,sc.height);snow.forEach(s=>{s.y+=s.sp;
 const PORT = process.env.PORT || 3000;
 (async function(){
     initHardcodedKeys();
-    if(!loadFromDisk()){
-        if(customAPIs.length===0)initCustomAPIs();
-    }
+    if(!loadFromDisk()){if(customAPIs.length===0)initCustomAPIs()}
     if(!keyStorage[MASTER_API_KEY])keyStorage[MASTER_API_KEY]=createMasterKey();
     scheduleSave();
     app.listen(PORT,()=>{
